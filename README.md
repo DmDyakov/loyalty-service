@@ -53,83 +53,143 @@ refactor/#18-database-layer
 # Архитектурная схема
 https://drive.google.com/file/d/1pm5SVC891RtNJsOA02LdSOjeHyg8Us-Y/view?usp=sharing
 
-# Структура каталогов
+## Порядок разработки
+
+### 1. Подготовка окружения
+
+#### macOS
+
+```bash
+go mod download
+brew install golangci-lint    # опционально
+brew install goose            # опционально
+```
+
+#### Windows (PowerShell)
+
+```bash
+go mod download
+choco install make
+choco install golangci-lint    # опционально
+go install github.com/pressly/goose/v3/cmd/goose@latest   # опционально
+```
+
+#### Linux
+
+```bash
+go mod download
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
+
+### 2. Запустить базу данных
+
+```bash
+make docker-up
+```
+
+### 3. Применить миграции
+
+```bash
+make migrate-up
+```
+
+### 4. Запустить систему начислений (accrual)
+
+В отдельном терминале:
+
+```bash
+make accrual
+```
+
+### 5. Запустить приложение
+
+В третьем терминале:
+
+```bash
+make run
+```
+
+---
+
+## Команды Makefile
+
+### Разработка
+
+| Команда | Описание |
+|---------|----------|
+| `make build` | Собрать бинарный файл |
+| `make run` | Запустить приложение локально |
+| `make test` | Запустить все тесты |
+| `make cover` | Запустить тесты с отчётом о покрытии |
+| `make cover-html` | Открыть отчёт о покрытии в браузере |
+| `make lint` | Проверить код линтером |
+| `make clean` | Удалить бинарник и временные файлы |
+
+### База данных
+
+| Команда | Описание |
+|---------|----------|
+| `make docker-up` | Запустить PostgreSQL |
+| `make docker-down` | Остановить PostgreSQL |
+| `make docker-reset` | Удалить контейнер и все данные |
+| `make docker-logs` | Посмотреть логи PostgreSQL |
+| `make migrate-up` | Применить миграции |
+| `make migrate-down` | Откатить миграции |
+| `make migrate-status` | Статус миграций |
+
+### Окружение
+
+| Команда | Описание |
+|---------|----------|
+| `make dev` | Запустить БД и accrual (всё для разработки) |
+| `make stop` | Остановить БД и accrual |
+| `make accrual` | Запустить только accrual |
+
+---
+
+## Переменные окружения
+
+Создайте файл `.env` в корне проекта (не коммитится):
+
+```env
+DATABASE_DSN=postgres://user:password@localhost:5432/loyalty?sslmode=disable
+ACCRUAL_ADDR=http://localhost:8081
+RUN_ADDRESS=localhost:8080
+```
+
+---
+
+## Структура проекта
 
 ```
 loyalty-service/
 ├── cmd/
-│   └── gofermart/
-│       └── main.go              # точка входа в приложение
+│   ├── accrual/              # бинарники системы начислений
+│   └── gophermart/           # точка входа приложения
+│       └── main.go
 ├── internal/
-│   ├── app/                     # сборка приложения
-│   │   └── app.go
-│   ├── config/                  # конфигурация
-│   │   └── config.go
-│   ├── handler/                 # HTTP-хендлеры
+│   ├── app/                  # инициализация приложения
+│   ├── config/               # конфигурация (флаги, ENV)
+│   ├── handler/              # HTTP-обработчики
 │   │   ├── auth.go
-│   │   ├── order.go
 │   │   ├── balance.go
-│   │   └── middleware.go
-│   ├── model/                   # модели данных
-│   │   ├── user.go
-│   │   ├── order.go
-│   │   └── withdrawal.go
-│   ├── repository/              # слой работы с БД
-│   │   ├── pg.go
-│   │   ├── user.go
-│   │   ├── order.go
-│   │   ├── balance.go
-│   │   └── withdrawal.go
-│   ├── service/                 # бизнес-логика
-│   │   ├── auth.go
-│   │   ├── order.go
-│   │   └── balance.go
-│   └── worker/                  # фоновые процессы
-│       └── accrual.go
-├── migrations/                  # миграции на верхнем уровне
-│   ├── 000001_init.up.sql
-│   ├── 000001_init.down.sql
-│   ├── 000002_add_withdrawals.up.sql
-│   └── 000002_add_withdrawals.down.sql
-├── pkg/
-│   └── luhn/
-│       └── luhn.go
+│   │   ├── middleware.go
+│   │   └── order.go
+│   ├── logger/               # логирование
+│   ├── model/                # модели данных
+│   ├── repository/           # слой работы с БД
+│   ├── service/              # бизнес-логика
+│   └── worker/               # фоновые процессы
+├── migrations/               # SQL-миграции
+├── pkg/                      # переиспользуемые пакеты
+│   └── luhn/                 # алгоритм Луна
+├── .env.example              # шаблон переменных окружения
 ├── .gitignore
+├── docker-compose.yml        # PostgreSQL + приложение
+├── Dockerfile                # сборка приложения
 ├── go.mod
 ├── go.sum
 ├── Makefile
-├── Dockerfile
-├── docker-compose.yml
 └── README.md
 ```
-
-## Команды для работы с проектом
-
-### Docker (база данных + приложение)
-
-| Действие | Команда |
-|----------|---------|
-| Запустить Docker Desktop | `open -a Docker` |
-| Запустить Docker и дождаться готовности | `open -a Docker && while ! docker ps > /dev/null 2>&1; do sleep 1; done && echo "Docker готов"` |
-| Запустить всё (БД + приложение) | `docker compose up -d` |
-| Запустить только базу данных | `docker compose up -d postgres` |
-| Остановить всё | `docker compose down` |
-| Сбросить всё (удалить данные БД) | `docker compose down -v` |
-| Выключить Docker Desktop | `osascript -e 'quit app "Docker"'` |
-
-### Accrual (внешняя система начислений)
-
-| Действие | Команда |
-|----------|---------|
-| Сделать бинарник исполняемым (Mac M1/M2/M3) | `chmod +x cmd/accrual/accrual_darwin_arm64` |
-| Сделать бинарник исполняемым (Mac Intel) | `chmod +x cmd/accrual/accrual_darwin_amd64` |
-| Запустить accrual на порту 8081 | `./cmd/accrual/accrual_darwin_arm64 -a ":8081"` |
-
-### Приложение (локальная разработка)
-
-| Действие | Команда |
-|----------|---------|
-| Запустить | `go run ./cmd/gophermart` |
-| Запустить тесты | `go test ./...` |
-| Запустить тесты с покрытием | `go test -cover ./...` |
-| Запустить линтер | `golangci-lint run` |

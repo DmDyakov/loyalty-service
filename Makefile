@@ -1,0 +1,127 @@
+.PHONY: build run test cover cover-html lint clean
+.PHONY: docker-up docker-down docker-reset docker-logs
+.PHONY: migrate-up migrate-down migrate-status
+.PHONY: dev stop accrual
+
+# ==========================================
+# Подхватываем .env файл
+# ==========================================
+-include .env
+export
+
+# ==========================================
+# Определение ОС для accrual
+# ==========================================
+ifeq ($(OS),Windows_NT)
+	ACCRUAL_BIN := ./cmd/accrual/accrual_windows_amd64.exe
+else
+	UNAME_S := $(shell uname -s)
+	UNAME_M := $(shell uname -m)
+	ifeq ($(UNAME_S),Darwin)
+		ifeq ($(UNAME_M),arm64)
+			ACCRUAL_BIN := ./cmd/accrual/accrual_darwin_arm64
+		else
+			ACCRUAL_BIN := ./cmd/accrual/accrual_darwin_amd64
+		endif
+	else
+		ACCRUAL_BIN := ./cmd/accrual/accrual_linux_amd64
+	endif
+endif
+
+# ==========================================
+# Переменные по умолчанию
+# ==========================================
+APP_NAME ?= gofermart
+CMD_DIR ?= ./cmd/gophermart
+DATABASE_DSN ?= postgres://user:password@localhost:5432/loyalty?sslmode=disable
+ACCRUAL_ADDR ?= http://localhost:8081
+RUN_ADDRESS ?= localhost:8080
+
+# ==========================================
+# Сборка
+# ==========================================
+build:
+	go build -o $(APP_NAME) $(CMD_DIR)
+
+# ==========================================
+# Запуск
+# ==========================================
+run:
+	go run $(CMD_DIR) -d "$(DATABASE_DSN)" -r "$(ACCRUAL_ADDR)" -a "$(RUN_ADDRESS)"
+
+# ==========================================
+# Тестирование
+# ==========================================
+test:
+	go test -v ./...
+
+cover:
+	go test -cover ./...
+
+cover-html:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
+# ==========================================
+# Линтер
+# ==========================================
+lint:
+	golangci-lint run ./...
+
+# ==========================================
+# Миграции
+# ==========================================
+migrate-up:
+	goose -dir migrations postgres "$(DATABASE_DSN)" up
+
+migrate-down:
+	goose -dir migrations postgres "$(DATABASE_DSN)" down
+
+migrate-status:
+	goose -dir migrations postgres "$(DATABASE_DSN)" status
+
+# ==========================================
+# Docker (БД)
+# ==========================================
+docker-up:
+	docker compose up -d postgres
+
+docker-down:
+	docker compose down
+
+docker-reset:
+	docker compose down -v
+
+docker-logs:
+	docker compose logs -f postgres
+
+# ==========================================
+# Accrual (автоопределение ОС)
+# ==========================================
+accrual:
+	chmod +x $(ACCRUAL_BIN) 2>/dev/null || true
+	$(ACCRUAL_BIN) -a ":8081"
+
+# ==========================================
+# Окружение для разработки
+# ==========================================
+dev: docker-up
+	@echo "Запускаю accrual..."
+	chmod +x $(ACCRUAL_BIN) 2>/dev/null || true
+	$(ACCRUAL_BIN) -a ":8081" &
+	@echo "Готово! Выполни make run для запуска приложения"
+
+# ==========================================
+# Остановка всего
+# ==========================================
+stop: docker-down
+	@echo "Останавливаю accrual..."
+	-pkill -f accrual 2>/dev/null || true
+	@echo "Всё остановлено"
+
+# ==========================================
+# Очистка
+# ==========================================
+clean:
+	rm -f $(APP_NAME)
+	rm -f coverage.out
