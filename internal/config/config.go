@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -14,12 +15,14 @@ type Config struct {
 	RunAddress     string `env:"RUN_ADDRESS"`
 	DatabaseDSN    string `env:"DATABASE_URI"`
 	AccrualBaseURL string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AppEnv         string `env:"APP_ENV"`
 }
 
 const (
 	defaultRunAddress     = "localhost:8080"
 	defaultDatabaseDSN    = ""
 	defaultAccrualBaseURL = ""
+	defaultAppEnv         = "dev"
 )
 
 func New(flags []string) (*Config, error) {
@@ -27,6 +30,7 @@ func New(flags []string) (*Config, error) {
 		RunAddress:     defaultRunAddress,
 		DatabaseDSN:    defaultDatabaseDSN,
 		AccrualBaseURL: defaultAccrualBaseURL,
+		AppEnv:         defaultAppEnv,
 	}
 
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -41,6 +45,7 @@ func New(flags []string) (*Config, error) {
 	fs.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "address and port to run server")
 	fs.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database DSN")
 	fs.StringVar(&cfg.AccrualBaseURL, "r", cfg.AccrualBaseURL, "Accrual system Base URL")
+	fs.StringVar(&cfg.AppEnv, "e", cfg.AppEnv, "application environment (prod, dev)")
 
 	if err := fs.Parse(flags); err != nil {
 		return nil, err
@@ -62,6 +67,12 @@ func (cfg *Config) validateConfig() error {
 	}
 	if cfg.AccrualBaseURL == "" {
 		return errors.New("accrual Base URL can not be empty")
+	}
+
+	switch cfg.AppEnv {
+	case "prod", "dev":
+	default:
+		return fmt.Errorf("invalid APP_ENV: %s (expected prod or dev)", cfg.AppEnv)
 	}
 	return nil
 }

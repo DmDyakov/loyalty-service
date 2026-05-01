@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"loyalty-service/internal/app"
 	"os"
 )
@@ -8,5 +9,8 @@ import (
 func main() {
 	args := os.Args[1:]
 
-	app.Run(args)
+	if err := app.Run(args); err != nil {
+		log.Fatal(err)
+	}
+
 }

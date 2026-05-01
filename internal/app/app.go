@@ -1,19 +1,32 @@
 package app
 
 import (
-	"log"
+	"fmt"
 	"loyalty-service/internal/config"
+	"loyalty-service/internal/logger"
+
+	"go.uber.org/zap"
 )
 
-func Run(args []string) {
-
+func Run(args []string) error {
 	cfg, err := config.New(args)
 	if err != nil {
-		log.Fatalf("failed to create app config: %s", err)
+		return fmt.Errorf("failed to create app config: %s", err)
 	}
 
 	if cfg == nil {
-		log.Fatalf("app config is nil")
+		return fmt.Errorf("app config is nil")
 	}
-	log.Printf("Server started on %s", cfg.RunAddress)
+
+	logger, err := logger.NewZapLogger(cfg)
+	if err != nil {
+		return fmt.Errorf("Failed to create server logger: %v", err)
+	}
+	defer logger.Sync()
+
+	logger.Info("Server started",
+		zap.String("url", cfg.RunAddress),
+	)
+
+	return nil
 }
