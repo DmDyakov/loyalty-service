@@ -102,3 +102,34 @@ loyalty-service/
 ├── docker-compose.yml
 └── README.md
 ```
+
+## Команды для работы с проектом
+
+### Docker (база данных + приложение)
+
+| Действие | Команда |
+|----------|---------|
+| Запустить Docker Desktop | `open -a Docker` |
+| Запустить Docker и дождаться готовности | `open -a Docker && while ! docker ps > /dev/null 2>&1; do sleep 1; done && echo "Docker готов"` |
+| Запустить всё (БД + приложение) | `docker compose up -d` |
+| Запустить только базу данных | `docker compose up -d postgres` |
+| Остановить всё | `docker compose down` |
+| Сбросить всё (удалить данные БД) | `docker compose down -v` |
+| Выключить Docker Desktop | `osascript -e 'quit app "Docker"'` |
+
+### Accrual (внешняя система начислений)
+
+| Действие | Команда |
+|----------|---------|
+| Сделать бинарник исполняемым (Mac M1/M2/M3) | `chmod +x cmd/accrual/accrual_darwin_arm64` |
+| Сделать бинарник исполняемым (Mac Intel) | `chmod +x cmd/accrual/accrual_darwin_amd64` |
+| Запустить accrual на порту 8081 | `./cmd/accrual/accrual_darwin_arm64 -a ":8081"` |
+
+### Приложение (локальная разработка)
+
+| Действие | Команда |
+|----------|---------|
+| Запустить | `go run ./cmd/gophermart` |
+| Запустить тесты | `go test ./...` |
+| Запустить тесты с покрытием | `go test -cover ./...` |
+| Запустить линтер | `golangci-lint run` |
