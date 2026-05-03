@@ -31,9 +31,8 @@ endif
 # ==========================================
 # Переменные по умолчанию
 # ==========================================
-APP_NAME ?= gofermart
+APP_NAME ?= loyalty-service
 CMD_DIR ?= ./cmd/gophermart
-DATABASE_DSN ?= postgres://user:password@localhost:5432/loyalty?sslmode=disable
 ACCRUAL_ADDR ?= http://localhost:8081
 RUN_ADDRESS ?= localhost:8080
 
@@ -47,7 +46,7 @@ build:
 # Запуск
 # ==========================================
 run:
-	go run $(CMD_DIR) -d "$(DATABASE_DSN)" -r "$(ACCRUAL_ADDR)" -a "$(RUN_ADDRESS)"
+	go run $(CMD_DIR) -d "$(DATABASE_URI)" -r "$(ACCRUAL_ADDR)" -a "$(RUN_ADDRESS)"
 
 # ==========================================
 # Тестирование
@@ -72,13 +71,13 @@ lint:
 # Миграции
 # ==========================================
 migrate-up:
-	goose -dir migrations postgres "$(DATABASE_DSN)" up
+	migrate -path migrations -database "$(DATABASE_URI)" up
 
 migrate-down:
-	goose -dir migrations postgres "$(DATABASE_DSN)" down
+	migrate -path migrations -database "$(DATABASE_URI)" down
 
 migrate-status:
-	goose -dir migrations postgres "$(DATABASE_DSN)" status
+	migrate -path migrations -database "$(DATABASE_URI)" version
 
 # ==========================================
 # Docker (БД)

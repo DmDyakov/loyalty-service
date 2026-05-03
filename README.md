@@ -62,7 +62,7 @@ https://drive.google.com/file/d/1pm5SVC891RtNJsOA02LdSOjeHyg8Us-Y/view?usp=shari
 ```bash
 go mod download
 brew install golangci-lint    # опционально
-brew install goose            # опционально
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest  # опционально
 ```
 
 #### Windows (PowerShell)
@@ -71,7 +71,7 @@ brew install goose            # опционально
 go mod download
 choco install make
 choco install golangci-lint    # опционально
-go install github.com/pressly/goose/v3/cmd/goose@latest   # опционально
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest   # опционально
 ```
 
 #### Linux
@@ -79,7 +79,7 @@ go install github.com/pressly/goose/v3/cmd/goose@latest   # опциональн
 ```bash
 go mod download
 curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-go install github.com/pressly/goose/v3/cmd/goose@latest
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 ```
 
 ### 2. Запустить базу данных
@@ -192,4 +192,29 @@ loyalty-service/
 ├── go.sum
 ├── Makefile
 └── README.md
+```
+
+```
+users
+- id (PK, int)
+- login (string)
+- password_hash (string)
+- created_at (timestamp)
+- updated_at (timestamp)
+----------------------------
+orders
+- id (PK, int)
+- number (string)
+- user_id  (FK -> users.id)
+- status (`NEW`, `INVALID`, `PROCESSING`, `PROCESSED`)
+- accrual (decimal)
+- uploaded_at (timestamp)
+- updated_at (timestamp)
+----------------------------
+withdrawals
+- id (PK, int)
+- order_number  (string, не связан с таблицей orders)
+- user_id  (FK -> users.id)
+- sum (decimal)
+- processed_at (timestamp)
 ```
