@@ -20,7 +20,7 @@ func Run(args []string) error {
 
 	logger, err := logger.NewZapLogger(cfg)
 	if err != nil {
-		return fmt.Errorf("Failed to create server logger: %v", err)
+		return fmt.Errorf("failed to create server logger: %v", err)
 	}
 	defer logger.Sync()
 
