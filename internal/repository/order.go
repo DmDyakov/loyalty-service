@@ -4,13 +4,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type OrderRepo struct {
+type OrderRepository struct {
 	db     DB
 	logger *zap.Logger
 }
 
-func NewOrderRepo(db DB, l *zap.Logger) (*OrderRepo, error) {
-	return &OrderRepo{
+func NewOrderRepository(db DB, l *zap.Logger) (*OrderRepository, error) {
+	return &OrderRepository{
 		db:     db,
 		logger: l,
 	}, nil
