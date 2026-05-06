@@ -6,16 +6,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	RunAddress     string `env:"RUN_ADDRESS"`
-	DatabaseDSN    string `env:"DATABASE_URI"`
-	AccrualBaseURL string `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	AppEnv         string `env:"APP_ENV"`
+	RunAddress     string        `env:"RUN_ADDRESS"`
+	DatabaseDSN    string        `env:"DATABASE_URI"`
+	AccrualBaseURL string        `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AppEnv         string        `env:"APP_ENV"`
+	RequestTimeout time.Duration `env:"REQUEST_TIMEOUT"`
 }
 
 const (
@@ -23,6 +25,7 @@ const (
 	defaultDatabaseDSN    = ""
 	defaultAccrualBaseURL = ""
 	defaultAppEnv         = "dev"
+	defaultRequestTimeout = 10 * time.Second
 )
 
 func New(flags []string) (*Config, error) {
@@ -31,6 +34,7 @@ func New(flags []string) (*Config, error) {
 		DatabaseDSN:    defaultDatabaseDSN,
 		AccrualBaseURL: defaultAccrualBaseURL,
 		AppEnv:         defaultAppEnv,
+		RequestTimeout: defaultRequestTimeout,
 	}
 
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -46,6 +50,7 @@ func New(flags []string) (*Config, error) {
 	fs.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database DSN")
 	fs.StringVar(&cfg.AccrualBaseURL, "r", cfg.AccrualBaseURL, "Accrual system Base URL")
 	fs.StringVar(&cfg.AppEnv, "e", cfg.AppEnv, "application environment (prod, dev)")
+	fs.DurationVar(&cfg.RequestTimeout, "t", cfg.RequestTimeout, "request timeout")
 
 	if err := fs.Parse(flags); err != nil {
 		return nil, err
@@ -67,6 +72,9 @@ func (cfg *Config) validateConfig() error {
 	}
 	if cfg.AccrualBaseURL == "" {
 		return errors.New("accrual Base URL can not be empty")
+	}
+	if cfg.RequestTimeout <= 0 {
+		return errors.New("request timeout can be > 0")
 	}
 
 	switch cfg.AppEnv {
