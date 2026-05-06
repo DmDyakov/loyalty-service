@@ -1,4 +1,4 @@
-package handler
+package middleware
 
 import (
 	"context"
@@ -98,7 +98,7 @@ func TestWithAuth(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		handler := m.withAuth(nextHandler)
+		handler := m.WithAuth(nextHandler)
 
 		req := httptest.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+validToken)
@@ -120,7 +120,7 @@ func TestWithAuth(t *testing.T) {
 			t.Error("next handler should not be called")
 		})
 
-		handler := m.withAuth(nextHandler)
+		handler := m.WithAuth(nextHandler)
 
 		req := httptest.NewRequest("GET", "/protected", nil)
 		w := httptest.NewRecorder()
@@ -140,7 +140,7 @@ func TestWithAuth(t *testing.T) {
 			t.Error("next handler should not be called")
 		})
 
-		handler := m.withAuth(nextHandler)
+		handler := m.WithAuth(nextHandler)
 
 		req := httptest.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Bearer "+invalidToken)
@@ -158,7 +158,7 @@ func TestWithAuth(t *testing.T) {
 			t.Error("next handler should not be called")
 		})
 
-		handler := m.withAuth(nextHandler)
+		handler := m.WithAuth(nextHandler)
 
 		req := httptest.NewRequest("GET", "/protected", nil)
 		req.Header.Set("Authorization", "Basic some-token")

@@ -1,4 +1,4 @@
-package handler
+package middleware
 
 import (
 	"net/http"
@@ -13,7 +13,7 @@ type ZapLogFormatter struct {
 	logger *zap.Logger
 }
 
-func (m *Middleware) withLogging(next http.Handler) http.Handler {
+func (m *Middleware) WithLogging(next http.Handler) http.Handler {
 	return middleware.RequestLogger(&ZapLogFormatter{
 		logger: m.logger,
 	})(next)

@@ -3,10 +3,11 @@ package handler
 import (
 	"context"
 	"loyalty-service/internal/config"
+	"loyalty-service/internal/handler/middleware"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"go.uber.org/zap"
 )
@@ -29,7 +30,7 @@ type Handler struct {
 	authHandler *AuthHandler
 	cfg         *config.Config
 	logger      *zap.Logger
-	middleware  *Middleware
+	middleware  *middleware.Middleware
 }
 
 func NewHandler(
@@ -39,7 +40,7 @@ func NewHandler(
 ) *Handler {
 	return &Handler{
 		authHandler: newAuthHandler(authService, cfg, logger),
-		middleware:  newMiddleware(authService, logger),
+		middleware:  middleware.NewMiddleware(authService, logger),
 		logger:      logger,
 		cfg:         cfg,
 	}
@@ -48,15 +49,15 @@ func NewHandler(
 func (h *Handler) RegisterRoutes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(h.middleware.withLogging)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Compress(5,
+	r.Use(chimw.RequestID)
+	r.Use(chimw.RealIP)
+	r.Use(h.middleware.WithLogging)
+	r.Use(chimw.Recoverer)
+	r.Use(chimw.Compress(5,
 		"application/json",
 		"text/plain",
 	))
-	r.Use(middleware.Timeout(h.cfg.RequestTimeout))
+	r.Use(chimw.Timeout(h.cfg.RequestTimeout))
 	r.Use(httprate.LimitByIP(RateLimitDefaultRPH, 1*time.Hour))
 
 	r.Group(func(r chi.Router) {
@@ -71,8 +72,10 @@ func (h *Handler) RegisterRoutes() chi.Router {
 
 	r.Group(func(r chi.Router) {
 		r.Use(httprate.LimitByIP(RateLimitDefaultRPM, 1*time.Minute))
-		r.Use(h.middleware.withAuth)
-		// TODO: реализовать приватные роуты
+		r.Use(h.middleware.WithAuth)
+		// r.Route("/api/user", func(r chi.Router) {
+		// 	// r.Get("/orders", h.orderHandler.OrdersByUserId)
+		// })
 
 	})
 

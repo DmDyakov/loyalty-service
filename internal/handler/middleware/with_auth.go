@@ -1,4 +1,4 @@
-package handler
+package middleware
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type contextKey string
 
 const UserIDKey contextKey = "userID"
 
-func (m *Middleware) withAuth(next http.Handler) http.Handler {
+func (m *Middleware) WithAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := extractBearerToken(r)
 		if err != nil {

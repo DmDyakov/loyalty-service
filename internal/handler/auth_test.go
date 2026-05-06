@@ -100,11 +100,11 @@ func TestHandler_Login(t *testing.T) {
 		h, mockAuthService := setupTestAuthHandler(t)
 
 		mockAuthService.EXPECT().
-			Register(gomock.Any(), "user123", "password123").
+			Login(gomock.Any(), "user123", "password123").
 			Return(testJWTToken, nil)
 
 		req, w := doTestRequest(t, method, endpoint, testReqData, contentType)
-		h.Register(w, req)
+		h.Login(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -119,11 +119,11 @@ func TestHandler_Login(t *testing.T) {
 		h, mockAuthService := setupTestAuthHandler(t)
 
 		mockAuthService.EXPECT().
-			Register(gomock.Any(), gomock.Any(), gomock.Any()).
+			Login(gomock.Any(), gomock.Any(), gomock.Any()).
 			Times(0)
 
 		req, w := doTestRequest(t, method, endpoint, testReqData, "text/plain")
-		h.Register(w, req)
+		h.Login(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Equal(t, "Content-Type must be application/json\n", w.Body.String())
