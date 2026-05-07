@@ -1,3 +1,4 @@
+// Package model определяет структуры данных сервиса.
 package model
 
 import (

@@ -1,3 +1,4 @@
+// Package middleware содержит промежуточные слои для авторизации, логирования и т д.
 package middleware
 
 import (

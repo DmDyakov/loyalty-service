@@ -52,6 +52,21 @@ func (db *DB) QueryContextWithRetry(ctx context.Context, query string, args ...a
 	})
 }
 
+// QueryRowContextWithRetry выполняет запрос, возвращающий ровно одну строку,
+// с автоматическим повтором при временных ошибках БД.
+// В отличие от QueryContextWithRetry, этот метод сам выполняет Scan
+// и возвращает готовые значения, а не *sql.Rows.
+func (db *DB) QueryRowContextWithRetry(ctx context.Context, query string, dest []any, args ...any) error {
+	_, err := doWithRetry(ctx, db.logger, func() (struct{}, error) {
+		row := db.QueryRowContext(ctx, query, args...)
+		if err := row.Scan(dest...); err != nil {
+			return struct{}{}, err
+		}
+		return struct{}{}, nil
+	})
+	return err
+}
+
 func doWithRetry[T any](ctx context.Context, logger *zap.Logger, fn func() (T, error)) (T, error) {
 	delays := []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
 	const maxAttempts = 4

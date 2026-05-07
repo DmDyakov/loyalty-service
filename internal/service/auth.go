@@ -39,7 +39,7 @@ func NewAuthService(repo UserRepository, cfg *config.Config, logger *zap.Logger)
 		cfg:            cfg,
 		logger:         logger,
 		secretKey:      []byte(cfg.JWTSecret),
-		tokenExpiry:    cfg.JWTExpiry * time.Hour,
+		tokenExpiry:    cfg.JWTExpiry,
 	}
 }
 
@@ -52,17 +52,8 @@ func (s *AuthService) Register(ctx context.Context, login, password string) (str
 
 	user, err := s.userRepository.SaveUser(ctx, login, passwordHash)
 	if err != nil {
-		s.logger.Error("failed to save user",
-			zap.String("login", login),
-			zap.Error(err),
-		)
 		return "", err
 	}
-
-	s.logger.Info("user registered successfully",
-		zap.Int("user_id", user.ID),
-		zap.String("login", user.Login),
-	)
 
 	return s.generateToken(user.ID, user.Login)
 }
@@ -70,24 +61,12 @@ func (s *AuthService) Register(ctx context.Context, login, password string) (str
 func (s *AuthService) Login(ctx context.Context, login, password string) (string, error) {
 	user, err := s.userRepository.FindUserByLogin(ctx, login)
 	if err != nil {
-		s.logger.Warn("login failed: user not found",
-			zap.String("login", login),
-			zap.Error(err),
-		)
 		return "", err
 	}
 
 	if !checkPassword(password, user.PasswordHash) {
-		s.logger.Warn("login failed: invalid password",
-			zap.String("login", login),
-		)
 		return "", errs.ErrInvalidCredentials
 	}
-
-	s.logger.Info("user logged in successfully",
-		zap.Int("user_id", user.ID),
-		zap.String("login", user.Login),
-	)
 
 	return s.generateToken(user.ID, user.Login)
 }
@@ -106,7 +85,6 @@ func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (in
 	})
 
 	if err != nil {
-		s.logger.Warn("token validation failed", zap.Error(err))
 		return 0, errs.ErrTokenInvalid
 	}
 

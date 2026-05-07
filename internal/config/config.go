@@ -1,3 +1,4 @@
+// Package config управляет конфигурацией приложения через флаги и переменные окружения.
 package config
 
 import (
@@ -13,13 +14,14 @@ import (
 )
 
 type Config struct {
-	RunAddress     string        `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
-	DatabaseDSN    string        `env:"DATABASE_URI" envDefault:""`
-	AccrualBaseURL string        `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
-	AppEnv         string        `env:"APP_ENV" envDefault:"dev"`
-	RequestTimeout time.Duration `env:"REQUEST_TIMEOUT" envDefault:"10s"`
-	JWTSecret      string        `env:"JWT_SECRET" envDefault:""`
-	JWTExpiry      time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
+	RunAddress      string        `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
+	DatabaseDSN     string        `env:"DATABASE_URI" envDefault:""`
+	AccrualBaseURL  string        `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
+	AppEnv          string        `env:"APP_ENV" envDefault:"dev"`
+	RequestTimeout  time.Duration `env:"REQUEST_TIMEOUT" envDefault:"10s"`
+	JWTSecret       string        `env:"JWT_SECRET" envDefault:""`
+	JWTExpiry       time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"30s"`
 }
 
 func New(flags []string) (*Config, error) {
@@ -69,6 +71,10 @@ func (cfg *Config) validateConfig() error {
 
 	if cfg.JWTExpiry <= 0 {
 		return errors.New("JWT expiry can be > 0")
+	}
+
+	if cfg.ShutdownTimeout <= 0 {
+		return errors.New("shutdown timeout must be > 0")
 	}
 
 	switch cfg.AppEnv {
