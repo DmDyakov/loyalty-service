@@ -162,20 +162,6 @@ func TestHandler_Login(t *testing.T) {
 	})
 }
 
-func setupTestAuthHandler(t *testing.T) (*AuthHandler, *mocks.MockAuthService) {
-	t.Helper()
-
-	ctrl := gomock.NewController(t)
-	t.Cleanup(ctrl.Finish)
-
-	mockAuthService := mocks.NewMockAuthService(ctrl)
-	logger := zap.NewNop()
-	cfg := &config.Config{RequestTimeout: 10 * time.Second}
-
-	h := newAuthHandler(mockAuthService, cfg, logger)
-	return h, mockAuthService
-}
-
 func testAuthValidation(t *testing.T, method, endpoint, contentType string, handler http.HandlerFunc) {
 	t.Helper()
 
@@ -239,4 +225,18 @@ func testAuthValidation(t *testing.T, method, endpoint, contentType string, hand
 			assert.Equal(t, tt.wantBody, w.Body.String())
 		})
 	}
+}
+
+func setupTestAuthHandler(t *testing.T) (*AuthHandler, *mocks.MockAuthService) {
+	t.Helper()
+
+	ctrl := gomock.NewController(t)
+	t.Cleanup(ctrl.Finish)
+
+	mockAuthService := mocks.NewMockAuthService(ctrl)
+	logger := zap.NewNop()
+	cfg := &config.Config{RequestTimeout: 10 * time.Second}
+
+	h := newAuthHandler(mockAuthService, cfg, logger)
+	return h, mockAuthService
 }

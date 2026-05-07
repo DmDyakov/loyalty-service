@@ -41,19 +41,19 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetUserByID mocks base method.
-func (m *MockUserRepository) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
+// FindUserByLogin mocks base method.
+func (m *MockUserRepository) FindUserByLogin(ctx context.Context, login string) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByID", ctx, userID)
+	ret := m.ctrl.Call(m, "FindUserByLogin", ctx, login)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByID indicates an expected call of GetUserByID.
-func (mr *MockUserRepositoryMockRecorder) GetUserByID(ctx, userID any) *gomock.Call {
+// FindUserByLogin indicates an expected call of FindUserByLogin.
+func (mr *MockUserRepositoryMockRecorder) FindUserByLogin(ctx, login any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUserRepository)(nil).GetUserByID), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByLogin", reflect.TypeOf((*MockUserRepository)(nil).FindUserByLogin), ctx, login)
 }
 
 // SaveUser mocks base method.

@@ -13,29 +13,17 @@ import (
 )
 
 type Config struct {
-	RunAddress     string        `env:"RUN_ADDRESS"`
-	DatabaseDSN    string        `env:"DATABASE_URI"`
-	AccrualBaseURL string        `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	AppEnv         string        `env:"APP_ENV"`
-	RequestTimeout time.Duration `env:"REQUEST_TIMEOUT"`
+	RunAddress     string        `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
+	DatabaseDSN    string        `env:"DATABASE_URI" envDefault:""`
+	AccrualBaseURL string        `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
+	AppEnv         string        `env:"APP_ENV" envDefault:"dev"`
+	RequestTimeout time.Duration `env:"REQUEST_TIMEOUT" envDefault:"10s"`
+	JWTSecret      string        `env:"JWT_SECRET" envDefault:""`
+	JWTExpiry      time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
 }
 
-const (
-	defaultRunAddress     = "localhost:8080"
-	defaultDatabaseDSN    = ""
-	defaultAccrualBaseURL = ""
-	defaultAppEnv         = "dev"
-	defaultRequestTimeout = 10 * time.Second
-)
-
 func New(flags []string) (*Config, error) {
-	cfg := &Config{
-		RunAddress:     defaultRunAddress,
-		DatabaseDSN:    defaultDatabaseDSN,
-		AccrualBaseURL: defaultAccrualBaseURL,
-		AppEnv:         defaultAppEnv,
-		RequestTimeout: defaultRequestTimeout,
-	}
+	cfg := &Config{}
 
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Printf("Warning: error loading .env file: %v", err)
@@ -50,7 +38,6 @@ func New(flags []string) (*Config, error) {
 	fs.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "database DSN")
 	fs.StringVar(&cfg.AccrualBaseURL, "r", cfg.AccrualBaseURL, "Accrual system Base URL")
 	fs.StringVar(&cfg.AppEnv, "e", cfg.AppEnv, "application environment (prod, dev)")
-	fs.DurationVar(&cfg.RequestTimeout, "t", cfg.RequestTimeout, "request timeout")
 
 	if err := fs.Parse(flags); err != nil {
 		return nil, err
@@ -76,11 +63,23 @@ func (cfg *Config) validateConfig() error {
 	if cfg.RequestTimeout <= 0 {
 		return errors.New("request timeout can be > 0")
 	}
+	if cfg.JWTSecret == "" {
+		return errors.New("JWT secret can not be empty")
+	}
+
+	if cfg.JWTExpiry <= 0 {
+		return errors.New("JWT expiry can be > 0")
+	}
 
 	switch cfg.AppEnv {
-	case "prod", "dev":
+	case "prod":
+		if len(cfg.JWTSecret) < 32 {
+			return errors.New("JWT secret must be at least 32 characters in production")
+		}
+	case "dev":
 	default:
 		return fmt.Errorf("invalid APP_ENV: %s (expected prod or dev)", cfg.AppEnv)
 	}
+
 	return nil
 }
