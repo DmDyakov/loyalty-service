@@ -5,6 +5,7 @@ import (
 	"context"
 	"loyalty-service/internal/config"
 	"loyalty-service/internal/handler/middleware"
+	"loyalty-service/internal/model"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -27,23 +28,32 @@ type AuthService interface {
 	ValidateToken(ctx context.Context, token string) (userID int, err error)
 }
 
+//go:generate mockgen -destination=mocks/orders_service.go -package=mocks . OrdersService
+type OrdersService interface {
+	AddOrder(ctx context.Context, userID int, orderNumber string) error
+	GetUserOrders(ctx context.Context, userID int) ([]model.Order, error)
+}
+
 type Handler struct {
-	authHandler *AuthHandler
-	cfg         *config.Config
-	logger      *zap.Logger
-	middleware  *middleware.Middleware
+	authHandler   *AuthHandler
+	ordersHandler *OrdersHandler
+	cfg           *config.Config
+	logger        *zap.Logger
+	middleware    *middleware.Middleware
 }
 
 func NewHandler(
 	authService AuthService,
+	orderService OrdersService,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *Handler {
 	return &Handler{
-		authHandler: newAuthHandler(authService, cfg, logger),
-		middleware:  middleware.NewMiddleware(authService, logger),
-		logger:      logger,
-		cfg:         cfg,
+		authHandler:   newAuthHandler(authService, cfg, logger),
+		ordersHandler: newOrdersHandler(orderService, cfg, logger),
+		middleware:    middleware.NewMiddleware(authService, logger),
+		logger:        logger,
+		cfg:           cfg,
 	}
 }
 
@@ -74,9 +84,10 @@ func (h *Handler) RegisterRoutes() chi.Router {
 	r.Group(func(r chi.Router) {
 		r.Use(httprate.LimitByIP(RateLimitDefaultRPM, 1*time.Minute))
 		r.Use(h.middleware.WithAuth)
-		// r.Route("/api/user", func(r chi.Router) {
-		// 	// r.Get("/orders", h.orderHandler.OrdersByUserId)
-		// })
+		r.Route("/api/user", func(r chi.Router) {
+			r.Post("/orders", h.ordersHandler.AddOrder)
+			r.Get("/orders", h.ordersHandler.GetUserOrders)
+		})
 
 	})
 
