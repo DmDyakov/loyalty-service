@@ -44,13 +44,13 @@ type Handler struct {
 
 func NewHandler(
 	authService AuthService,
-	orderService OrdersService,
+	ordersService OrdersService,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *Handler {
 	return &Handler{
 		authHandler:   newAuthHandler(authService, cfg, logger),
-		ordersHandler: newOrdersHandler(orderService, cfg, logger),
+		ordersHandler: newOrdersHandler(ordersService, cfg, logger),
 		middleware:    middleware.NewMiddleware(authService, logger),
 		logger:        logger,
 		cfg:           cfg,

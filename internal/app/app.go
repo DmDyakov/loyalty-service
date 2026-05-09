@@ -39,14 +39,28 @@ func Run(ctx context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create db: %v", err)
 	}
-	if err := db.Close(); err != nil {
-		logger.Error("failed to close database", zap.Error(err))
-	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("failed to close database", zap.Error(err))
+		}
+	}()
 
 	userRepo := repository.NewUserRepository(db, logger)
-	authSrv := service.NewAuthService(userRepo, cfg, logger)
+	ordersRepo := repository.NewOrdersRepository(db, logger)
+	// balanceRepo := repository.NewBalanceRepository(db, logger)
 
-	handler := handler.NewHandler(authSrv, cfg, logger)
+	authSrv := service.NewAuthService(userRepo, cfg, logger)
+	ordersSrv := service.NewOrdersService(ordersRepo, cfg, logger)
+	// balanceSrv := service.NewBalanceService(balanceRepo, cfg, logger)
+
+	handler := handler.NewHandler(
+		authSrv,
+		ordersSrv,
+		// balanceRepo,
+		cfg,
+		logger,
+	)
 	r := handler.RegisterRoutes()
 	server := &http.Server{
 		Addr:         cfg.RunAddress,
