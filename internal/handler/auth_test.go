@@ -18,12 +18,14 @@ import (
 )
 
 func TestHandler_Register(t *testing.T) {
-	method := "POST"
-	endpoint := "/api/user/register"
-	testReqData := `{"login":"user123","password":"password123"}`
-	contentType := "application/json"
-	testJWTToken := "test-jwt-token"
-	tokenType := "Bearer"
+	const (
+		method       = "POST"
+		endpoint     = "/api/user/register"
+		testReqData  = `{"login":"user123","password":"password123"}`
+		contentType  = "application/json"
+		testJWTToken = "test-jwt-token"
+		tokenType    = "Bearer"
+	)
 
 	t.Run("success", func(t *testing.T) {
 		h, mockAuthService := setupTestAuthHandler(t)
@@ -89,12 +91,14 @@ func TestHandler_Register(t *testing.T) {
 }
 
 func TestHandler_Login(t *testing.T) {
-	method := "POST"
-	endpoint := "/api/user/login"
-	testReqData := `{"login":"user123","password":"password123"}`
-	contentType := "application/json"
-	testJWTToken := "test-jwt-token"
-	tokenType := "Bearer"
+	const (
+		method       = "POST"
+		endpoint     = "/api/user/login"
+		testReqData  = `{"login":"user123","password":"password123"}`
+		contentType  = "application/json"
+		testJWTToken = "test-jwt-token"
+		tokenType    = "Bearer"
+	)
 
 	t.Run("success", func(t *testing.T) {
 		h, mockAuthService := setupTestAuthHandler(t)
