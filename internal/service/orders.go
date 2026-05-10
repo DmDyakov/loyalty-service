@@ -7,6 +7,7 @@ import (
 	"loyalty-service/internal/config"
 	"loyalty-service/internal/errs"
 	"loyalty-service/internal/model"
+	"loyalty-service/pkg/luhn"
 
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
@@ -41,6 +42,10 @@ func NewOrdersService(repo OrdersRepository, cfg *config.Config, logger *zap.Log
 }
 
 func (s *OrdersService) AddOrder(ctx context.Context, userID int, orderNumber string) error {
+	ok := luhn.Valid(orderNumber)
+	if !ok {
+		return errs.ErrInvalidOrderNumber
+	}
 
 	if err := s.repo.SaveOrder(ctx, userID, orderNumber); err != nil {
 		switch {
