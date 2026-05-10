@@ -31,9 +31,11 @@ func Run(ctx context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create server logger: %v", err)
 	}
-	if err := logger.Sync(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to sync logger: %v\n", err)
-	}
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to sync logger: %v\n", err)
+		}
+	}()
 
 	db, err := repository.NewDB(cfg.DatabaseDSN, logger)
 	if err != nil {

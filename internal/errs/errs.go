@@ -11,6 +11,11 @@ var (
 
 var (
 	ErrOrderUploadedByAnother = errors.New("order has been uploaded by another user")
-	ErrOrderAlreadyUploaded   = errors.New("order has been already uploaded")
+	ErrOrderAlreadyExists     = errors.New("order has been already uploaded")
 	ErrInvalidOrderNumber     = errors.New("invalid order number")
+	ErrOrderStatusesRequired  = errors.New("at least one order status is required")
+)
+
+var (
+	ErrUnsupportedLimit = errors.New("unsupported limit")
 )

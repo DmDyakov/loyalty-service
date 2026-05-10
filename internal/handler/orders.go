@@ -72,7 +72,7 @@ func (h *OrdersHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, errs.ErrInvalidOrderNumber):
 			http.Error(w, err.Error(), StatusUnprocessableEntity)
 			return
-		case errors.Is(err, errs.ErrOrderAlreadyUploaded):
+		case errors.Is(err, errs.ErrOrderAlreadyExists):
 			w.WriteHeader(http.StatusOK)
 			return
 		case errors.Is(err, errs.ErrOrderUploadedByAnother):
@@ -80,7 +80,7 @@ func (h *OrdersHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 			return
 
 		default:
-			h.logger.Error("AddOrder service error", zap.Error(err))
+			h.logger.Error("failed to add order", zap.Error(err))
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -97,9 +97,15 @@ func (h *OrdersHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := h.srv.GetUserOrders(ctx, userID)
+	params, err := parsePaginationParams(r)
 	if err != nil {
-		h.logger.Error("GetUserOrders handler error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	orders, err := h.srv.GetUserOrders(ctx, userID, params.Limit, params.Offset)
+	if err != nil {
+		h.logger.Error("failed to get user orders", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

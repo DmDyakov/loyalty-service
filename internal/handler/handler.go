@@ -31,7 +31,7 @@ type AuthService interface {
 //go:generate mockgen -destination=mocks/orders_service.go -package=mocks . OrdersService
 type OrdersService interface {
 	AddOrder(ctx context.Context, userID int, orderNumber string) error
-	GetUserOrders(ctx context.Context, userID int) ([]model.Order, error)
+	GetUserOrders(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error)
 }
 
 type Handler struct {
@@ -71,24 +71,19 @@ func (h *Handler) RegisterRoutes() chi.Router {
 	r.Use(chimw.Timeout(h.cfg.RequestTimeout))
 	r.Use(httprate.LimitByIP(RateLimitDefaultRPH, 1*time.Hour))
 
-	r.Group(func(r chi.Router) {
-		r.Use(httprate.LimitByIP(RateLimitAuthRPM, 1*time.Minute))
-
-		r.Route("/api/user", func(r chi.Router) {
+	r.Route("/api/user", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(httprate.LimitByIP(RateLimitAuthRPM, 1*time.Minute))
 			r.Post("/register", h.authHandler.Register)
 			r.Post("/login", h.authHandler.Login)
 		})
 
-	})
-
-	r.Group(func(r chi.Router) {
-		r.Use(httprate.LimitByIP(RateLimitDefaultRPM, 1*time.Minute))
-		r.Use(h.middleware.WithAuth)
-		r.Route("/api/user", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(httprate.LimitByIP(RateLimitDefaultRPM, 1*time.Minute))
+			r.Use(h.middleware.WithAuth)
 			r.Post("/orders", h.ordersHandler.AddOrder)
 			r.Get("/orders", h.ordersHandler.GetUserOrders)
 		})
-
 	})
 
 	return r

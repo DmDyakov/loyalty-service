@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"loyalty-service/internal/errs"
 	"loyalty-service/internal/model"
 
 	"github.com/shopspring/decimal"
@@ -20,18 +21,133 @@ func NewOrdersRepository(db *DB, l *zap.Logger) *OrdersRepository {
 	}
 }
 
-func (r *OrdersRepository) SaveOrder(ctx context.Context, orderNumber string, userID int) (*model.Order, error) {
-	panic("not implemented")
+func (r *OrdersRepository) SaveOrder(ctx context.Context, userID int, orderNumber string) error {
+	_, err := r.db.ExecContextWithRetry(
+		ctx,
+		`INSERT INTO orders (number, user_id)
+		VALUES ($1, $2)`,
+		orderNumber,
+		userID,
+	)
+
+	if err != nil {
+		if isUniqueViolation(err) {
+			return errs.ErrOrderAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }
 
-func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int) ([]model.Order, error) {
-	panic("not implemented")
+func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error) {
+	if limit > 100 {
+		return nil, errs.ErrUnsupportedLimit
+	}
+
+	rows, err := r.db.QueryContextWithRetry(
+		ctx,
+		`SELECT number, status, accrual, uploaded_at FROM orders
+		WHERE user_id = $1
+		ORDER BY uploaded_at DESC
+		LIMIT $2 OFFSET $3`,
+		userID,
+		limit,
+		offset,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []model.Order
+	for rows.Next() {
+		var o model.Order
+
+		if err := rows.Scan(&o.Number, &o.Status, &o.Accrual, &o.UploadedAt); err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, o)
+	}
+
+	return orders, nil
 }
 
-func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []model.OrderStatus) {
-	panic("not implemented")
+func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []string, limit int, offset int) ([]string, error) {
+	if len(statuses) == 0 {
+		return nil, errs.ErrOrderStatusesRequired
+	}
+
+	if limit > 100 {
+		return nil, errs.ErrUnsupportedLimit
+	}
+
+	rows, err := r.db.QueryContextWithRetry(
+		ctx,
+		`SELECT number FROM orders
+		WHERE status = ANY($1)
+		ORDER BY uploaded_at ASC
+		LIMIT $2 OFFSET $3`,
+		statuses,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orderNumbers []string
+	for rows.Next() {
+		var n string
+		if err := rows.Scan(&n); err != nil {
+			return nil, err
+		}
+		orderNumbers = append(orderNumbers, n)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orderNumbers, nil
 }
 
-func (r *OrdersRepository) UpdateOrderStatus(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) (*model.Order, error) {
-	panic("not implemented")
+func (r *OrdersRepository) UpdateOrderStatus(
+	ctx context.Context,
+	orderNumber string,
+	status model.OrderStatus,
+	accrual decimal.Decimal,
+) error {
+	_, err := r.db.ExecContextWithRetry(
+		ctx,
+		`UPDATE orders
+		SET status = $1, accrual = $2, updated_at = NOW()
+		WHERE number = $3`,
+		status,
+		accrual,
+		orderNumber,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OrdersRepository) FindUserIDByOrderNumber(ctx context.Context, orderNumber string) (int, error) {
+	var userID int
+	dest := []any{&userID}
+	if err := r.db.QueryRowContextWithRetry(
+		ctx,
+		`SELECT user_id FROM orders WHERE number = $1`,
+		dest,
+		orderNumber,
+	); err != nil {
+		return 0, err
+	}
+
+	return userID, nil
 }
