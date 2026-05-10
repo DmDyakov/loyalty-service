@@ -200,7 +200,7 @@ func setupTestAuthService(t *testing.T) (*AuthService, *mocks.MockUserRepository
 	mockUserRepository := mocks.NewMockUserRepository(ctrl)
 	cfg := &config.Config{
 		JWTSecret: "test-secret-key",
-		JWTExpiry: 1,
+		JWTExpiry: 1 * time.Hour,
 	}
 	logger := zap.NewNop()
 	s := NewAuthService(mockUserRepository, cfg, logger)

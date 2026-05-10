@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -destination=mocks/order_repository.go -package=mocks . OrderRepository
+//go:generate mockgen -destination=mocks/order_repository.go -package=mocks . OrdersRepository
 type OrdersRepository interface {
 	SaveOrder(ctx context.Context, userID int, orderNumber string) error
 	FindOrdersByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error)
