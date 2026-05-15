@@ -17,5 +17,12 @@ var (
 )
 
 var (
-	ErrUnsupportedLimit = errors.New("unsupported limit")
+	ErrInsufficientFunds = errors.New("insufficient funds")
 )
+
+var (
+	ErrUnsupportedLimit  = errors.New("unsupported limit")
+	ErrUnsupportedOffset = errors.New("unsupported offset")
+)
+
+const StatusUnprocessable = 422

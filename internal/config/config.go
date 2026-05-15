@@ -22,6 +22,7 @@ type Config struct {
 	JWTSecret       string        `env:"JWT_SECRET" envDefault:""`
 	JWTExpiry       time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"30s"`
+	MaxResults      int           `env:"MAX_RESULTS" envDefault:"100"`
 }
 
 func New(flags []string) (*Config, error) {
@@ -75,6 +76,10 @@ func (cfg *Config) validateConfig() error {
 
 	if cfg.ShutdownTimeout <= 0 {
 		return errors.New("shutdown timeout must be > 0")
+	}
+
+	if cfg.MaxResults <= 0 {
+		return errors.New("max results must be > 0")
 	}
 
 	switch cfg.AppEnv {

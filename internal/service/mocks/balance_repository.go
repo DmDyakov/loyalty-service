@@ -43,25 +43,25 @@ func (m *MockBalanceRepository) EXPECT() *MockBalanceRepositoryMockRecorder {
 }
 
 // FindWithdrawalsByUser mocks base method.
-func (m *MockBalanceRepository) FindWithdrawalsByUser(ctx context.Context, userID int) ([]model.Withdrawal, error) {
+func (m *MockBalanceRepository) FindWithdrawalsByUser(ctx context.Context, userID, limit, offset int) ([]model.Withdrawal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindWithdrawalsByUser", ctx, userID)
+	ret := m.ctrl.Call(m, "FindWithdrawalsByUser", ctx, userID, limit, offset)
 	ret0, _ := ret[0].([]model.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindWithdrawalsByUser indicates an expected call of FindWithdrawalsByUser.
-func (mr *MockBalanceRepositoryMockRecorder) FindWithdrawalsByUser(ctx, userID any) *gomock.Call {
+func (mr *MockBalanceRepositoryMockRecorder) FindWithdrawalsByUser(ctx, userID, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWithdrawalsByUser", reflect.TypeOf((*MockBalanceRepository)(nil).FindWithdrawalsByUser), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWithdrawalsByUser", reflect.TypeOf((*MockBalanceRepository)(nil).FindWithdrawalsByUser), ctx, userID, limit, offset)
 }
 
 // GetBalanceByUser mocks base method.
-func (m *MockBalanceRepository) GetBalanceByUser(ctx context.Context, userID int) (decimal.Decimal, error) {
+func (m *MockBalanceRepository) GetBalanceByUser(ctx context.Context, userID int) (*model.Balance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBalanceByUser", ctx, userID)
-	ret0, _ := ret[0].(decimal.Decimal)
+	ret0, _ := ret[0].(*model.Balance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -73,16 +73,15 @@ func (mr *MockBalanceRepositoryMockRecorder) GetBalanceByUser(ctx, userID any) *
 }
 
 // SaveWithdrawal mocks base method.
-func (m *MockBalanceRepository) SaveWithdrawal(ctx context.Context, orderNumber string, userID int, amount decimal.Decimal) (*model.Withdrawal, error) {
+func (m *MockBalanceRepository) SaveWithdrawal(ctx context.Context, userID int, orderNumber string, sum decimal.Decimal) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveWithdrawal", ctx, orderNumber, userID, amount)
-	ret0, _ := ret[0].(*model.Withdrawal)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "SaveWithdrawal", ctx, userID, orderNumber, sum)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SaveWithdrawal indicates an expected call of SaveWithdrawal.
-func (mr *MockBalanceRepositoryMockRecorder) SaveWithdrawal(ctx, orderNumber, userID, amount any) *gomock.Call {
+func (mr *MockBalanceRepositoryMockRecorder) SaveWithdrawal(ctx, userID, orderNumber, sum any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWithdrawal", reflect.TypeOf((*MockBalanceRepository)(nil).SaveWithdrawal), ctx, orderNumber, userID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWithdrawal", reflect.TypeOf((*MockBalanceRepository)(nil).SaveWithdrawal), ctx, userID, orderNumber, sum)
 }

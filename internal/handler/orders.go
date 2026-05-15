@@ -60,17 +60,15 @@ func (h *OrdersHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderNumber := strings.TrimSpace(string(body))
 
-	const StatusUnprocessableEntity = 422
-	if err := h.validateOrderNumber(orderNumber); err != nil {
-
-		http.Error(w, err.Error(), StatusUnprocessableEntity)
+	if err := validateOrderNumber(orderNumber); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err := h.srv.AddOrder(ctx, userID, orderNumber); err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInvalidOrderNumber):
-			http.Error(w, err.Error(), StatusUnprocessableEntity)
+			http.Error(w, err.Error(), errs.StatusUnprocessable)
 			return
 		case errors.Is(err, errs.ErrOrderAlreadyExists):
 			w.WriteHeader(http.StatusOK)
@@ -97,7 +95,7 @@ func (h *OrdersHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := parsePaginationParams(r)
+	params, err := parsePaginationParams(r, h.cfg.MaxResults)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -116,24 +114,10 @@ func (h *OrdersHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(orders); err != nil {
 		h.logger.Error("failed to encode response", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-}
-
-func (h *OrdersHandler) validateOrderNumber(orderNumber string) error {
-	if len(orderNumber) == 0 {
-		return errors.New("order number is required")
-	}
-	for _, r := range orderNumber {
-		if r < '0' || r > '9' {
-			return errors.New("order number must be consist of digits only")
-		}
-	}
-
-	return nil
 }

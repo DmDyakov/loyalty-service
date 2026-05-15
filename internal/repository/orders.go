@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"loyalty-service/internal/errs"
 	"loyalty-service/internal/model"
 
@@ -41,20 +42,21 @@ func (r *OrdersRepository) SaveOrder(ctx context.Context, userID int, orderNumbe
 }
 
 func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error) {
-	if limit > 100 {
-		return nil, errs.ErrUnsupportedLimit
+	query := `SELECT number, status, accrual, uploaded_at FROM orders 
+              WHERE user_id = $1 
+              ORDER BY uploaded_at DESC`
+	args := []any{userID}
+
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
+		args = append(args, limit)
+	}
+	if offset > 0 {
+		query += fmt.Sprintf(" OFFSET $%d", len(args)+1)
+		args = append(args, offset)
 	}
 
-	rows, err := r.db.QueryContextWithRetry(
-		ctx,
-		`SELECT number, status, accrual, uploaded_at FROM orders
-		WHERE user_id = $1
-		ORDER BY uploaded_at DESC
-		LIMIT $2 OFFSET $3`,
-		userID,
-		limit,
-		offset,
-	)
+	rows, err := r.db.QueryContextWithRetry(ctx, query, args...)
 
 	if err != nil {
 		return nil, err
@@ -80,20 +82,22 @@ func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []
 		return nil, errs.ErrOrderStatusesRequired
 	}
 
-	if limit > 100 {
-		return nil, errs.ErrUnsupportedLimit
+	query := `SELECT number FROM orders
+		WHERE status = ANY($1)
+		ORDER BY uploaded_at ASC`
+	args := []any{statuses}
+
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
+		args = append(args, limit)
 	}
 
-	rows, err := r.db.QueryContextWithRetry(
-		ctx,
-		`SELECT number FROM orders
-		WHERE status = ANY($1)
-		ORDER BY uploaded_at ASC
-		LIMIT $2 OFFSET $3`,
-		statuses,
-		limit,
-		offset,
-	)
+	if offset > 0 {
+		query += fmt.Sprintf(" OFFSET $%d", len(args)+1)
+		args = append(args, offset)
+	}
+
+	rows, err := r.db.QueryContextWithRetry(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

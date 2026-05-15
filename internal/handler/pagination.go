@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"loyalty-service/internal/errs"
 	"net/http"
 	"strconv"
 )
@@ -11,26 +11,26 @@ type PaginationParams struct {
 	Offset int
 }
 
-func parsePaginationParams(r *http.Request) (PaginationParams, error) {
-	limit, err := parseIntParam(r, "limit", 10)
-	if err != nil {
-		return PaginationParams{}, err
+func parsePaginationParams(r *http.Request, maxResults int) (PaginationParams, error) {
+	params := PaginationParams{
+		Limit: -1,
 	}
-	offset, err := parseIntParam(r, "offset", 0)
-	if err != nil {
-		return PaginationParams{}, err
-	}
-	return PaginationParams{Limit: limit, Offset: offset}, nil
-}
 
-func parseIntParam(r *http.Request, name string, defaultVal int) (int, error) {
-	valStr := r.URL.Query().Get(name)
-	if valStr == "" {
-		return defaultVal, nil
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 || limit > maxResults {
+			return PaginationParams{}, errs.ErrUnsupportedLimit
+		}
+		params.Limit = limit
 	}
-	val, err := strconv.Atoi(valStr)
-	if err != nil {
-		return 0, fmt.Errorf("invalid %s: %w", name, err)
+
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		offset, err := strconv.Atoi(offsetStr)
+		if err != nil || offset < 0 {
+			return PaginationParams{}, errs.ErrUnsupportedOffset
+		}
+		params.Offset = offset
 	}
-	return val, nil
+
+	return params, nil
 }

@@ -50,16 +50,16 @@ func Run(ctx context.Context, args []string) error {
 
 	userRepo := repository.NewUserRepository(db, logger)
 	ordersRepo := repository.NewOrdersRepository(db, logger)
-	// balanceRepo := repository.NewBalanceRepository(db, logger)
+	balanceRepo := repository.NewBalanceRepository(db, logger)
 
 	authSrv := service.NewAuthService(userRepo, cfg, logger)
 	ordersSrv := service.NewOrdersService(ordersRepo, cfg, logger)
-	// balanceSrv := service.NewBalanceService(balanceRepo, cfg, logger)
+	balanceSrv := service.NewBalanceService(balanceRepo, cfg, logger)
 
 	handler := handler.NewHandler(
 		authSrv,
 		ordersSrv,
-		// balanceRepo,
+		balanceSrv,
 		cfg,
 		logger,
 	)

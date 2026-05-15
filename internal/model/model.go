@@ -36,10 +36,10 @@ type Withdrawal struct {
 	OrderNumber string          `json:"order"`
 	UserID      int             `json:"-"`
 	Sum         decimal.Decimal `json:"sum"`
-	ProcessedAt time.Time       `json:"-"`
+	ProcessedAt time.Time       `json:"processed_at"`
 }
 
 type Balance struct {
-	Current   decimal.Decimal `json:"current"`
-	Withdrawn decimal.Decimal `json:"withdrawn"`
+	Current   *decimal.Decimal `json:"current"`
+	Withdrawn *decimal.Decimal `json:"withdrawn"`
 }
