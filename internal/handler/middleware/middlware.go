@@ -8,8 +8,6 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, login, password string) (token string, err error)
-	Login(ctx context.Context, login, password string) (token string, err error)
 	ValidateToken(ctx context.Context, token string) (userID int, err error)
 }
 
