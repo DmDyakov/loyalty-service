@@ -12,6 +12,7 @@ import (
 	"loyalty-service/internal/repository"
 	"loyalty-service/internal/service"
 	accrualworker "loyalty-service/internal/worker/accrual"
+	"loyalty-service/migrations"
 	"net/http"
 	"os"
 	"time"
@@ -49,6 +50,10 @@ func Run(ctx context.Context, args []string) error {
 			logger.Error("failed to close database", zap.Error(err))
 		}
 	}()
+
+	if err := migrations.Run(db.DB); err != nil {
+		return fmt.Errorf("migration failed: %w", err)
+	}
 
 	userRepo := repository.NewUserRepository(db, logger)
 	ordersRepo := repository.NewOrdersRepository(db, logger)
