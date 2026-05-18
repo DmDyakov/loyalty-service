@@ -106,12 +106,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) respondWithToken(w http.ResponseWriter, token string) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]string{
-		"access_token": token,
-		"token_type":   "Bearer",
-	}); err != nil {
-		h.logger.Error("failed to encode response", zap.Error(err))
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
+	w.Header().Set("Authorization", "Bearer "+token)
+	w.WriteHeader(http.StatusOK)
 }
