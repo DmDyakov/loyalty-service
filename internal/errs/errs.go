@@ -1,6 +1,10 @@
 package errs
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 var (
 	ErrInvalidCredentials = errors.New("invalid login or password")
@@ -26,3 +30,11 @@ var (
 )
 
 const StatusUnprocessable = 422
+
+type ErrRateLimited struct {
+	RetryAfter time.Duration
+}
+
+func (e *ErrRateLimited) Error() string {
+	return fmt.Sprintf("rate limited, retry after %s", e.RetryAfter)
+}

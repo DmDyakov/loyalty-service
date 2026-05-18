@@ -19,7 +19,7 @@ type OrdersRepository interface {
 	FindOrdersByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error)
 	FindOrdersByStatuses(ctx context.Context, statuses []string, limit int, offset int) ([]string, error)
 	FindUserIDByOrderNumber(ctx context.Context, orderNumber string) (int, error)
-	UpdateOrderStatus(
+	UpdateOrderInfo(
 		ctx context.Context,
 		orderNumber string,
 		status model.OrderStatus,
@@ -70,6 +70,6 @@ func (s *OrdersService) GetUserOrders(ctx context.Context, userID int, limit int
 	return s.repo.FindOrdersByUser(ctx, userID, limit, offset)
 }
 
-func (s *OrdersService) UpdateOrderStatus(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error {
-	return s.repo.UpdateOrderStatus(ctx, orderNumber, status, accrual)
+func (s *OrdersService) UpdateOrderInfo(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error {
+	return s.repo.UpdateOrderInfo(ctx, orderNumber, status, accrual)
 }

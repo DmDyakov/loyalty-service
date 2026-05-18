@@ -23,6 +23,8 @@ type Config struct {
 	JWTExpiry       time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"30s"`
 	MaxResults      int           `env:"MAX_RESULTS" envDefault:"100"`
+	PollingInterval time.Duration `env:"POLLING_INTERVAL" envDefault:"10s"`
+	RequestInterval time.Duration `env:"REQUEST_INTERVAL" envDefault:"200ms"`
 }
 
 func New(flags []string) (*Config, error) {
@@ -80,6 +82,14 @@ func (cfg *Config) validateConfig() error {
 
 	if cfg.MaxResults <= 0 {
 		return errors.New("max results must be > 0")
+	}
+
+	if cfg.PollingInterval <= 0 {
+		return errors.New("polling interval must be > 0")
+	}
+
+	if cfg.RequestInterval <= 0 {
+		return errors.New("request interval must be > 0")
 	}
 
 	switch cfg.AppEnv {

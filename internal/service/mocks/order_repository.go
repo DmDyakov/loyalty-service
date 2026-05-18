@@ -101,16 +101,16 @@ func (mr *MockOrdersRepositoryMockRecorder) SaveOrder(ctx, userID, orderNumber a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrder", reflect.TypeOf((*MockOrdersRepository)(nil).SaveOrder), ctx, userID, orderNumber)
 }
 
-// UpdateOrderStatus mocks base method.
-func (m *MockOrdersRepository) UpdateOrderStatus(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error {
+// UpdateOrderInfo mocks base method.
+func (m *MockOrdersRepository) UpdateOrderInfo(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrderStatus", ctx, orderNumber, status, accrual)
+	ret := m.ctrl.Call(m, "UpdateOrderInfo", ctx, orderNumber, status, accrual)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateOrderStatus indicates an expected call of UpdateOrderStatus.
-func (mr *MockOrdersRepositoryMockRecorder) UpdateOrderStatus(ctx, orderNumber, status, accrual any) *gomock.Call {
+// UpdateOrderInfo indicates an expected call of UpdateOrderInfo.
+func (mr *MockOrdersRepositoryMockRecorder) UpdateOrderInfo(ctx, orderNumber, status, accrual any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderStatus", reflect.TypeOf((*MockOrdersRepository)(nil).UpdateOrderStatus), ctx, orderNumber, status, accrual)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderInfo", reflect.TypeOf((*MockOrdersRepository)(nil).UpdateOrderInfo), ctx, orderNumber, status, accrual)
 }

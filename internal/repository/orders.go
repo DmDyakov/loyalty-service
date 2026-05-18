@@ -119,7 +119,7 @@ func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []
 	return orderNumbers, nil
 }
 
-func (r *OrdersRepository) UpdateOrderStatus(
+func (r *OrdersRepository) UpdateOrderInfo(
 	ctx context.Context,
 	orderNumber string,
 	status model.OrderStatus,

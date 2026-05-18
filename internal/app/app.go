@@ -5,11 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	accrualclient "loyalty-service/internal/client/accrual"
 	"loyalty-service/internal/config"
 	"loyalty-service/internal/handler"
 	"loyalty-service/internal/logger"
 	"loyalty-service/internal/repository"
 	"loyalty-service/internal/service"
+	accrualworker "loyalty-service/internal/worker/accrual"
 	"net/http"
 	"os"
 	"time"
@@ -72,6 +74,16 @@ func Run(ctx context.Context, args []string) error {
 		IdleTimeout:  30 * time.Second,
 	}
 
+	accrualClient := accrualclient.New(cfg.AccrualBaseURL, logger)
+
+	accrualPoller := accrualworker.NewPoller(
+		accrualClient,
+		ordersRepo,
+		cfg.PollingInterval,
+		cfg.RequestInterval,
+		logger,
+	)
+
 	appCtx, appCancel := context.WithCancel(ctx)
 	defer appCancel()
 
@@ -81,6 +93,12 @@ func Run(ctx context.Context, args []string) error {
 			logger.Error("listen error", zap.Error(err))
 			appCancel()
 		}
+	}()
+
+	go func() {
+		logger.Info("accrual poller started")
+		accrualPoller.Start(appCtx)
+		logger.Info("accrual poller stopped")
 	}()
 
 	<-appCtx.Done()
