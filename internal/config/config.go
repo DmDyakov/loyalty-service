@@ -19,7 +19,7 @@ type Config struct {
 	AccrualBaseURL  string        `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:""`
 	AppEnv          string        `env:"APP_ENV" envDefault:"dev"`
 	RequestTimeout  time.Duration `env:"REQUEST_TIMEOUT" envDefault:"10s"`
-	JWTSecret       string        `env:"JWT_SECRET" envDefault:""`
+	JWTSecret       string        `env:"JWT_SECRET" envDefault:"yu2ikdafk3sdfh52skdfh"`
 	JWTExpiry       time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"30s"`
 	MaxResults      int           `env:"MAX_RESULTS" envDefault:"100"`
