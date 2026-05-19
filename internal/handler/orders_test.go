@@ -116,7 +116,10 @@ func setupTestOrdersHandler(t *testing.T) (*Handler, *mocks.MockOrdersService, *
 	mocksAuthService := mocks.NewMockAuthService(ctrl)
 	mocksBalanceService := mocks.NewMockBalanceService(ctrl)
 	logger := zap.NewNop()
-	cfg := &config.Config{RequestTimeout: 10 * time.Second}
+	cfg := &config.Config{
+		RequestTimeout: 10 * time.Second,
+		MaxResults:     100,
+	}
 
 	h := NewHandler(
 		mocksAuthService,

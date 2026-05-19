@@ -41,12 +41,11 @@ func (h *BalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(balance); err != nil {
+	if err := json.NewEncoder(w).Encode(toBalanceResponse(balance)); err != nil {
 		h.logger.Error("failed to encode response", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
 }
 
 func (h *BalanceHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +120,7 @@ func (h *BalanceHandler) GetUserWithdrawals(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(withdrawals); err != nil {
+	if err := json.NewEncoder(w).Encode(toWithdrawalsResponse(withdrawals)); err != nil {
 		h.logger.Error("failed to encode response", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

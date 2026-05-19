@@ -114,7 +114,7 @@ func (h *OrdersHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(orders); err != nil {
+	if err := json.NewEncoder(w).Encode(toOrdersResponse(orders)); err != nil {
 		h.logger.Error("failed to encode response", zap.Error(err))
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
