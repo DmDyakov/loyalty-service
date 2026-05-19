@@ -1,3 +1,4 @@
+// Package accrual реализует воркер для периодического опроса системы расчёта баллов лояльности.
 package accrual
 
 import (
@@ -14,15 +15,18 @@ import (
 
 const defaultBatchSize = 50
 
+//go:generate mockgen -destination=mocks/accrual_client.go -package=mocks . AccrualClient
 type AccrualClient interface {
 	GetOrderInfo(ctx context.Context, orderNumber string) (*accrual.OrderInfo, error)
 }
 
+//go:generate mockgen -destination=mocks/orders_repository.go -package=mocks . OrdersRepository
 type OrdersRepository interface {
 	FindOrdersByStatuses(ctx context.Context, statuses []string, limit, offset int) ([]string, error)
 	UpdateOrderInfo(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error
 }
 
+// Poller — воркер, периодически опрашивающий систему начислений.
 type Poller struct {
 	client          AccrualClient
 	repo            OrdersRepository
@@ -32,6 +36,7 @@ type Poller struct {
 	batchSize       int
 }
 
+// NewPoller создает новый экземпляр Poller.
 func NewPoller(
 	client AccrualClient,
 	repo OrdersRepository,
@@ -49,6 +54,7 @@ func NewPoller(
 	}
 }
 
+// Start запускает бесконечный цикл опроса системы начислений.
 func (p *Poller) Start(ctx context.Context) {
 	ticker := time.NewTicker(p.pollingInterval)
 	defer ticker.Stop()
@@ -63,6 +69,7 @@ func (p *Poller) Start(ctx context.Context) {
 	}
 }
 
+// processBatch обрабатывает один батч заказов — запрашивает статусы и обновляет их.
 func (p *Poller) processBatch(ctx context.Context) {
 	orders, err := p.repo.FindOrdersByStatuses(
 		ctx,

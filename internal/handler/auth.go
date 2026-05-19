@@ -109,6 +109,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// respondWithToken отправляет JWT токен в ответе.
 func (h *AuthHandler) respondWithToken(w http.ResponseWriter, token string) {
 	w.Header().Set("Authorization", "Bearer "+token)
 	w.WriteHeader(http.StatusOK)

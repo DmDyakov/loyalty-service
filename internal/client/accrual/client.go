@@ -1,3 +1,4 @@
+// Package accrual реализует HTTP-клиент для взаимодействия с системой расчёта баллов лояльности.
 package accrual
 
 import (
@@ -13,18 +14,21 @@ import (
 	"go.uber.org/zap"
 )
 
+// Client — HTTP-клиент для взаимодействия с внешней системой расчёта баллов лояльности.
 type Client struct {
 	baseURL    string
 	logger     *zap.Logger
 	httpClient *http.Client
 }
 
+// OrderInfo содержит информацию о расчёте начислений для конкретного заказа.
 type OrderInfo struct {
 	Number  string          `json:"order"`
 	Status  string          `json:"status"`
 	Accrual decimal.Decimal `json:"accrual"`
 }
 
+// New создает новый экземпляр Client с заданным базовым URL и логгером.
 func New(baseURL string, l *zap.Logger) *Client {
 	return &Client{
 		baseURL: baseURL,
@@ -35,6 +39,7 @@ func New(baseURL string, l *zap.Logger) *Client {
 	}
 }
 
+// GetOrderInfo запрашивает информацию о расчёте начислений для указанного номера заказа.
 func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderInfo, error) {
 	method := http.MethodGet
 	url := fmt.Sprintf("%s/api/orders/%s", c.baseURL, orderNumber)
@@ -95,20 +100,19 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 		return nil, nil
 
 	case http.StatusTooManyRequests:
-		retryAfter := resp.Header.Get("Retry-After")
-		if retryAfter != "" {
-			seconds, err := strconv.Atoi(retryAfter)
-			if err != nil {
-				seconds = 0
+		retryAfter := 0
+		if v := resp.Header.Get("Retry-After"); v != "" {
+			if seconds, err := strconv.Atoi(v); err == nil {
+				retryAfter = seconds
 			}
-
-			delay := time.Duration(seconds) * time.Second
-			c.logger.Warn("rate limited by accrual service",
-				zap.Duration("retry_after", delay),
-				zap.String("order", orderNumber),
-			)
-			return nil, &errs.ErrRateLimited{RetryAfter: delay}
 		}
+		delay := time.Duration(retryAfter) * time.Second
+		c.logger.Warn("rate limited by accrual service",
+			zap.Duration("retry_after", delay),
+			zap.String("order", orderNumber),
+		)
+		return nil, &errs.ErrRateLimited{RetryAfter: delay}
+
 	default:
 		c.logger.Error("unexpected status from accrual",
 			zap.String("order", orderNumber),
@@ -116,6 +120,4 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 		)
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
-
-	return nil, nil
 }

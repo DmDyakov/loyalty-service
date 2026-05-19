@@ -42,6 +42,7 @@ type BalanceService interface {
 	GetUserWithdrawals(ctx context.Context, userID int, limit int, offset int) ([]model.Withdrawal, error)
 }
 
+// Handler — структура, объединяющая все HTTP-обработчики.
 type Handler struct {
 	authHandler    *AuthHandler
 	ordersHandler  *OrdersHandler
@@ -51,6 +52,7 @@ type Handler struct {
 	middleware     *middleware.Middleware
 }
 
+// NewHandler создает новый экземпляр Handler.
 func NewHandler(
 	authService AuthService,
 	ordersService OrdersService,
