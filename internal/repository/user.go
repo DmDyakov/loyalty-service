@@ -1,3 +1,4 @@
+// Package repository содержит слой доступа к базе данных.
 package repository
 
 import (
@@ -12,11 +13,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// UserRepository управляет данными пользователей в базе данных.
 type UserRepository struct {
 	db     *DB
 	logger *zap.Logger
 }
 
+// NewUserRepository создает новый экземпляр UserRepository.
 func NewUserRepository(db *DB, l *zap.Logger) *UserRepository {
 	return &UserRepository{
 		db:     db,
@@ -24,6 +27,7 @@ func NewUserRepository(db *DB, l *zap.Logger) *UserRepository {
 	}
 }
 
+// SaveUser сохраняет нового пользователя в базе данных.
 func (r *UserRepository) SaveUser(ctx context.Context, login string, passwordHash string) (*model.User, error) {
 	user := &model.User{}
 	dest := []any{&user.ID, &user.Login}
@@ -49,6 +53,7 @@ func (r *UserRepository) SaveUser(ctx context.Context, login string, passwordHas
 	return user, nil
 }
 
+// FindUserByLogin ищет пользователя по логину.
 func (r *UserRepository) FindUserByLogin(ctx context.Context, login string) (*model.User, error) {
 	user := &model.User{
 		Login: login,

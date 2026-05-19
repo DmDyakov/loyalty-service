@@ -6,11 +6,13 @@ import (
 	"strconv"
 )
 
+// PaginationParams содержит параметры пагинации запросов.
 type PaginationParams struct {
 	Limit  int
 	Offset int
 }
 
+// parsePaginationParams извлекает и валидирует параметры пагинации из HTTP запроса.
 func parsePaginationParams(r *http.Request, maxResults int) (PaginationParams, error) {
 	params := PaginationParams{
 		Limit: -1,

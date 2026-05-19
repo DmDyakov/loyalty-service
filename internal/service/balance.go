@@ -25,6 +25,7 @@ type BalanceService struct {
 	logger *zap.Logger
 }
 
+// NewBalanceService создает новый экземпляр сервиса баланса.
 func NewBalanceService(repo BalanceRepository, cfg *config.Config, logger *zap.Logger) *BalanceService {
 	return &BalanceService{
 		repo:   repo,
@@ -33,6 +34,7 @@ func NewBalanceService(repo BalanceRepository, cfg *config.Config, logger *zap.L
 	}
 }
 
+// GetUserBalance возвращает текущий баланс пользователя (начисления минус списания).
 func (s *BalanceService) GetUserBalance(ctx context.Context, userID int) (*model.Balance, error) {
 	accrualSum, err := s.repo.GetAccrualSumByUser(ctx, userID)
 	if err != nil {
@@ -51,6 +53,7 @@ func (s *BalanceService) GetUserBalance(ctx context.Context, userID int) (*model
 	}, nil
 }
 
+// Withdraw выполняет списание баллов лояльности в счёт оплаты заказа.
 func (s *BalanceService) Withdraw(ctx context.Context, userID int, orderNumber string, sum decimal.Decimal) error {
 	ok := luhn.Valid(orderNumber)
 	if !ok {
@@ -60,6 +63,7 @@ func (s *BalanceService) Withdraw(ctx context.Context, userID int, orderNumber s
 	return s.repo.SaveWithdrawal(ctx, userID, orderNumber, sum)
 }
 
+// GetUserWithdrawals возвращает историю списаний пользователя с пагинацией.
 func (s *BalanceService) GetUserWithdrawals(ctx context.Context, userID int, limit int, offset int) ([]model.Withdrawal, error) {
 
 	return s.repo.FindWithdrawalsByUser(ctx, userID, limit, offset)

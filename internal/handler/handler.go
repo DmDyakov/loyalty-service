@@ -68,6 +68,7 @@ func NewHandler(
 	}
 }
 
+// RegisterRoutes регистрирует все маршруты API с применением middleware.
 func (h *Handler) RegisterRoutes() chi.Router {
 	r := chi.NewRouter()
 

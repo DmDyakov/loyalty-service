@@ -57,19 +57,34 @@ func (mr *MockBalanceRepositoryMockRecorder) FindWithdrawalsByUser(ctx, userID, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindWithdrawalsByUser", reflect.TypeOf((*MockBalanceRepository)(nil).FindWithdrawalsByUser), ctx, userID, limit, offset)
 }
 
-// GetBalanceByUser mocks base method.
-func (m *MockBalanceRepository) GetBalanceByUser(ctx context.Context, userID int) (*model.Balance, error) {
+// GetAccrualSumByUser mocks base method.
+func (m *MockBalanceRepository) GetAccrualSumByUser(ctx context.Context, userID int) (*decimal.Decimal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBalanceByUser", ctx, userID)
-	ret0, _ := ret[0].(*model.Balance)
+	ret := m.ctrl.Call(m, "GetAccrualSumByUser", ctx, userID)
+	ret0, _ := ret[0].(*decimal.Decimal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetBalanceByUser indicates an expected call of GetBalanceByUser.
-func (mr *MockBalanceRepositoryMockRecorder) GetBalanceByUser(ctx, userID any) *gomock.Call {
+// GetAccrualSumByUser indicates an expected call of GetAccrualSumByUser.
+func (mr *MockBalanceRepositoryMockRecorder) GetAccrualSumByUser(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalanceByUser", reflect.TypeOf((*MockBalanceRepository)(nil).GetBalanceByUser), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccrualSumByUser", reflect.TypeOf((*MockBalanceRepository)(nil).GetAccrualSumByUser), ctx, userID)
+}
+
+// GetWithdrawnSumByUser mocks base method.
+func (m *MockBalanceRepository) GetWithdrawnSumByUser(ctx context.Context, userID int) (*decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWithdrawnSumByUser", ctx, userID)
+	ret0, _ := ret[0].(*decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWithdrawnSumByUser indicates an expected call of GetWithdrawnSumByUser.
+func (mr *MockBalanceRepositoryMockRecorder) GetWithdrawnSumByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithdrawnSumByUser", reflect.TypeOf((*MockBalanceRepository)(nil).GetWithdrawnSumByUser), ctx, userID)
 }
 
 // SaveWithdrawal mocks base method.

@@ -6,6 +6,7 @@ import (
 	"loyalty-service/internal/model"
 )
 
+// OrderResponse представляет ответ с информацией о заказе.
 type OrderResponse struct {
 	Number     string    `json:"number"`
 	Status     string    `json:"status"`
@@ -13,17 +14,20 @@ type OrderResponse struct {
 	UploadedAt time.Time `json:"uploaded_at"`
 }
 
+// WithdrawalResponse представляет ответ с информацией о списании.
 type WithdrawalResponse struct {
 	OrderNumber string    `json:"order"`
 	Sum         float64   `json:"sum"`
 	ProcessedAt time.Time `json:"processed_at"`
 }
 
+// BalanceResponse представляет ответ с информацией о балансе.
 type BalanceResponse struct {
 	Current   float64 `json:"current"`
 	Withdrawn float64 `json:"withdrawn"`
 }
 
+// toOrdersResponse преобразует модель заказов в формат ответа API.
 func toOrdersResponse(orders []model.Order) []OrderResponse {
 	result := make([]OrderResponse, len(orders))
 	for i, o := range orders {
@@ -41,6 +45,7 @@ func toOrdersResponse(orders []model.Order) []OrderResponse {
 	return result
 }
 
+// toWithdrawalsResponse преобразует модель списаний в формат ответа API.
 func toWithdrawalsResponse(withdrawals []model.Withdrawal) []WithdrawalResponse {
 	result := make([]WithdrawalResponse, len(withdrawals))
 	for i, w := range withdrawals {
@@ -54,6 +59,7 @@ func toWithdrawalsResponse(withdrawals []model.Withdrawal) []WithdrawalResponse 
 	return result
 }
 
+// toBalanceResponse преобразует модель баланса в формат ответа API.
 func toBalanceResponse(balance *model.Balance) BalanceResponse {
 	current, _ := balance.Current.Float64()
 	withdrawn, _ := balance.Withdrawn.Float64()

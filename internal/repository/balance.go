@@ -12,11 +12,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// BalanceRepository управляет данными баланса и списаний в базе данных.
 type BalanceRepository struct {
 	db     *DB
 	logger *zap.Logger
 }
 
+// NewBalanceRepository создает новый экземпляр BalanceRepository.
 func NewBalanceRepository(db *DB, l *zap.Logger) *BalanceRepository {
 	return &BalanceRepository{
 		db:     db,
@@ -24,6 +26,7 @@ func NewBalanceRepository(db *DB, l *zap.Logger) *BalanceRepository {
 	}
 }
 
+// GetAccrualSumByUser возвращает сумму всех начислений пользователя.
 func (r *BalanceRepository) GetAccrualSumByUser(ctx context.Context, userID int) (*decimal.Decimal, error) {
 	var sum *decimal.Decimal
 	dest := []any{&sum}
@@ -40,6 +43,7 @@ func (r *BalanceRepository) GetAccrualSumByUser(ctx context.Context, userID int)
 	return sum, nil
 }
 
+// GetWithdrawnSumByUser возвращает сумму всех списаний пользователя.
 func (r *BalanceRepository) GetWithdrawnSumByUser(ctx context.Context, userID int) (*decimal.Decimal, error) {
 	var sum *decimal.Decimal
 	dest := []any{&sum}
@@ -56,6 +60,7 @@ func (r *BalanceRepository) GetWithdrawnSumByUser(ctx context.Context, userID in
 	return sum, nil
 }
 
+// SaveWithdrawal сохраняет новое списание с проверкой баланса в транзакции.
 func (r *BalanceRepository) SaveWithdrawal(ctx context.Context, userID int, orderNumber string, sum decimal.Decimal) error {
 	_, err := doWithRetry(ctx, r.db.logger, func() (any, error) {
 		tx, err := r.db.BeginTx(ctx, nil)
@@ -118,6 +123,7 @@ func (r *BalanceRepository) SaveWithdrawal(ctx context.Context, userID int, orde
 	return err
 }
 
+// FindWithdrawalsByUser возвращает историю списаний пользователя с пагинацией.
 func (r *BalanceRepository) FindWithdrawalsByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Withdrawal, error) {
 	query := `SELECT order_number, sum, processed_at FROM withdrawals
 		WHERE user_id = $1
@@ -138,7 +144,11 @@ func (r *BalanceRepository) FindWithdrawalsByUser(ctx context.Context, userID in
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			r.logger.Error("failed to close rows", zap.Error(closeErr))
+		}
+	}()
 
 	var withdrawals []model.Withdrawal
 	for rows.Next() {

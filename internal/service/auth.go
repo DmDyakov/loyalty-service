@@ -28,12 +28,14 @@ type AuthService struct {
 	tokenExpiry    time.Duration
 }
 
+// Claims содержит данные, закодированные в JWT токене.
 type Claims struct {
 	UserID int
 	Login  string
 	jwt.RegisteredClaims
 }
 
+// NewAuthService создает новый экземпляр сервиса аутентификации.
 func NewAuthService(repo UserRepository, cfg *config.Config, logger *zap.Logger) *AuthService {
 	return &AuthService{
 		userRepository: repo,
@@ -44,6 +46,7 @@ func NewAuthService(repo UserRepository, cfg *config.Config, logger *zap.Logger)
 	}
 }
 
+// Register регистрирует нового пользователя и возвращает JWT токен.
 func (s *AuthService) Register(ctx context.Context, login, password string) (string, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
@@ -59,6 +62,7 @@ func (s *AuthService) Register(ctx context.Context, login, password string) (str
 	return s.generateToken(user.ID, user.Login)
 }
 
+// Login аутентифицирует пользователя по логину и паролю, возвращает JWT токен.
 func (s *AuthService) Login(ctx context.Context, login, password string) (string, error) {
 	user, err := s.userRepository.FindUserByLogin(ctx, login)
 	if err != nil {
@@ -72,6 +76,7 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 	return s.generateToken(user.ID, user.Login)
 }
 
+// ValidateToken проверяет валидность JWT токена и возвращает ID пользователя.
 func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (int, error) {
 	claims := &Claims{}
 
@@ -90,7 +95,7 @@ func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (in
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+		if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
 			s.logger.Warn("token has expired")
 			return 0, errs.ErrTokenInvalid
 		}

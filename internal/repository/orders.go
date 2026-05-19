@@ -10,11 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// OrdersRepository управляет данными заказов в базе данных.
 type OrdersRepository struct {
 	db     *DB
 	logger *zap.Logger
 }
 
+// NewOrdersRepository создает новый экземпляр OrdersRepository.
 func NewOrdersRepository(db *DB, l *zap.Logger) *OrdersRepository {
 	return &OrdersRepository{
 		db:     db,
@@ -22,6 +24,7 @@ func NewOrdersRepository(db *DB, l *zap.Logger) *OrdersRepository {
 	}
 }
 
+// SaveOrder сохраняет новый заказ в базе данных.
 func (r *OrdersRepository) SaveOrder(ctx context.Context, userID int, orderNumber string) error {
 	_, err := r.db.ExecContextWithRetry(
 		ctx,
@@ -41,6 +44,7 @@ func (r *OrdersRepository) SaveOrder(ctx context.Context, userID int, orderNumbe
 	return nil
 }
 
+// FindOrdersByUser возвращает список заказов пользователя с пагинацией.
 func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error) {
 	query := `SELECT number, status, accrual, uploaded_at FROM orders 
               WHERE user_id = $1 
@@ -61,7 +65,9 @@ func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int, lim
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var orders []model.Order
 	for rows.Next() {
@@ -77,6 +83,7 @@ func (r *OrdersRepository) FindOrdersByUser(ctx context.Context, userID int, lim
 	return orders, nil
 }
 
+// FindOrdersByStatuses возвращает номера заказов с указанными статусами.
 func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []string, limit int, offset int) ([]string, error) {
 	if len(statuses) == 0 {
 		return nil, errs.ErrOrderStatusesRequired
@@ -101,7 +108,9 @@ func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var orderNumbers []string
 	for rows.Next() {
@@ -119,6 +128,7 @@ func (r *OrdersRepository) FindOrdersByStatuses(ctx context.Context, statuses []
 	return orderNumbers, nil
 }
 
+// UpdateOrderInfo обновляет информацию о заказе (статус, начисление).
 func (r *OrdersRepository) UpdateOrderInfo(
 	ctx context.Context,
 	orderNumber string,
@@ -141,6 +151,7 @@ func (r *OrdersRepository) UpdateOrderInfo(
 	return nil
 }
 
+// FindUserIDByOrderNumber возвращает ID пользователя, загрузившего заказ.
 func (r *OrdersRepository) FindUserIDByOrderNumber(ctx context.Context, orderNumber string) (int, error) {
 	var userID int
 	dest := []any{&userID}

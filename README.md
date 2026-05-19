@@ -150,10 +150,10 @@ make run
 
 ## Переменные окружения
 
-Создайте файл `.env` в корне проекта (не коммитится):
+Для локального запуска создайте файл `.env` в корне проекта:
 
-```env
-DATABASE_DSN=postgres://user:password@localhost:5432/loyalty?sslmode=disable
+```
+DATABASE_DSN=postgres://<user>:<password>@localhost:5432/loyalty?sslmode=disable
 ACCRUAL_ADDR=http://localhost:8081
 RUN_ADDRESS=localhost:8080
 ```

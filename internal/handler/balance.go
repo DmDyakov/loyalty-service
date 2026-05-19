@@ -26,6 +26,8 @@ func newBalanceHandler(balanceService BalanceService, cfg *config.Config, logger
 	}
 }
 
+// GetUserBalance обрабатывает запрос на получение текущего баланса пользователя.
+// GET /api/user/balance
 func (h *BalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID, ok := middleware.GetUserIDFromContext(ctx)
@@ -48,6 +50,8 @@ func (h *BalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// Withdraw обрабатывает запрос на списание баллов с накопительного счёта.
+// POST /api/user/balance/withdraw
 func (h *BalanceHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
@@ -93,6 +97,8 @@ func (h *BalanceHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// GetUserWithdrawals обрабатывает запрос на получение истории списаний пользователя.
+// GET /api/user/withdrawals
 func (h *BalanceHandler) GetUserWithdrawals(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID, ok := middleware.GetUserIDFromContext(ctx)

@@ -33,6 +33,7 @@ type OrdersService struct {
 	logger *zap.Logger
 }
 
+// NewOrdersService создает новый экземпляр сервиса заказов.
 func NewOrdersService(repo OrdersRepository, cfg *config.Config, logger *zap.Logger) *OrdersService {
 	return &OrdersService{
 		repo:   repo,
@@ -41,6 +42,7 @@ func NewOrdersService(repo OrdersRepository, cfg *config.Config, logger *zap.Log
 	}
 }
 
+// AddOrder добавляет новый заказ пользователя с проверкой номера по алгоритму Луна.
 func (s *OrdersService) AddOrder(ctx context.Context, userID int, orderNumber string) error {
 	ok := luhn.Valid(orderNumber)
 	if !ok {
@@ -66,10 +68,12 @@ func (s *OrdersService) AddOrder(ctx context.Context, userID int, orderNumber st
 	return nil
 }
 
+// GetUserOrders возвращает список заказов пользователя с пагинацией.
 func (s *OrdersService) GetUserOrders(ctx context.Context, userID int, limit int, offset int) ([]model.Order, error) {
 	return s.repo.FindOrdersByUser(ctx, userID, limit, offset)
 }
 
+// UpdateOrderInfo обновляет статус и сумму начисления для заказа.
 func (s *OrdersService) UpdateOrderInfo(ctx context.Context, orderNumber string, status model.OrderStatus, accrual decimal.Decimal) error {
 	return s.repo.UpdateOrderInfo(ctx, orderNumber, status, accrual)
 }

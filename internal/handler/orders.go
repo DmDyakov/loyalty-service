@@ -27,6 +27,8 @@ func newOrdersHandler(orderService OrdersService, cfg *config.Config, logger *za
 	}
 }
 
+// AddOrder обрабатывает запрос на добавление нового номера заказа для расчёта.
+// POST /api/user/orders
 func (h *OrdersHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID, ok := middleware.GetUserIDFromContext(ctx)
@@ -87,6 +89,8 @@ func (h *OrdersHandler) AddOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// GetUserOrders обрабатывает запрос на получение списка загруженных заказов пользователя.
+// GET /api/user/orders
 func (h *OrdersHandler) GetUserOrders(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID, ok := middleware.GetUserIDFromContext(ctx)

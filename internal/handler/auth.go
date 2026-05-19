@@ -35,6 +35,8 @@ func newAuthHandler(
 	}
 }
 
+// Register обрабатывает запрос на регистрацию нового пользователя.
+// POST /api/user/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
@@ -70,6 +72,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	h.respondWithToken(w, token)
 }
 
+// Login обрабатывает запрос на аутентификацию пользователя.
+// POST /api/user/login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Content-Type must be application/json", http.StatusBadRequest)
@@ -108,7 +112,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) respondWithToken(w http.ResponseWriter, token string) {
 	w.Header().Set("Authorization", "Bearer "+token)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"access_token": token,
 		"token_type":   "Bearer",
 	})

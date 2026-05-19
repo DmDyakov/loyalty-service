@@ -7,6 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// validateCredentials проверяет корректность логина и пароля.
 func (h *AuthHandler) validateCredentials(creds Credentials) error {
 	const (
 		minLoginLen    = 3
@@ -44,6 +45,7 @@ func (h *AuthHandler) validateCredentials(creds Credentials) error {
 	return nil
 }
 
+// validateOrderNumber проверяет, что номер заказа состоит только из цифр.
 func validateOrderNumber(orderNumber string) error {
 	if len(orderNumber) == 0 {
 		return errors.New("order number is required")
@@ -57,6 +59,7 @@ func validateOrderNumber(orderNumber string) error {
 	return nil
 }
 
+// validateWithdrawalSum проверяет, что сумма списания положительна и имеет не более 2 знаков после запятой.
 func validateWithdrawalSum(sum decimal.Decimal) error {
 	if sum.LessThanOrEqual(decimal.Zero) {
 		return errors.New("sum must be greater than zero")

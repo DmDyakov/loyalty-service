@@ -14,11 +14,13 @@ import (
 
 const dbConnectionTimeout = 5 * time.Second
 
+// DB оборачивает sql.DB, добавляя логирование и повторные попытки для временных ошибок.
 type DB struct {
 	*sql.DB
 	logger *zap.Logger
 }
 
+// NewDB создает новое подключение к базе данных.
 func NewDB(databaseDSN string, logger *zap.Logger) (*DB, error) {
 	sqlDB, err := sql.Open("pgx", databaseDSN)
 	if err != nil {
@@ -40,12 +42,14 @@ func NewDB(databaseDSN string, logger *zap.Logger) (*DB, error) {
 	return &DB{sqlDB, logger}, nil
 }
 
+// ExecContextWithRetry выполняет запрос с автоматическим повтором при временных ошибках.
 func (db *DB) ExecContextWithRetry(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	return doWithRetry(ctx, db.logger, func() (sql.Result, error) {
 		return db.ExecContext(ctx, query, args...)
 	})
 }
 
+// QueryContextWithRetry выполняет запрос с возвратом строк и автоматическим повтором.
 func (db *DB) QueryContextWithRetry(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	return doWithRetry(ctx, db.logger, func() (*sql.Rows, error) {
 		return db.QueryContext(ctx, query, args...)
