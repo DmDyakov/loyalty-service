@@ -39,6 +39,12 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 	method := http.MethodGet
 	url := fmt.Sprintf("%s/api/orders/%s", c.baseURL, orderNumber)
 
+	c.logger.Info("requesting accrual",
+		zap.String("method", method),
+		zap.String("url", url),
+		zap.String("order", orderNumber),
+	)
+
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
@@ -48,6 +54,10 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		c.logger.Error("accrual request failed",
+			zap.String("url", url),
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("do request: %w", err)
 	}
 
@@ -57,15 +67,32 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 		}
 	}()
 
+	c.logger.Info("accrual response",
+		zap.String("order", orderNumber),
+		zap.Int("status", resp.StatusCode),
+	)
+
 	switch resp.StatusCode {
 	case http.StatusOK:
 		var orderInfo OrderInfo
 		if err := json.NewDecoder(resp.Body).Decode(&orderInfo); err != nil {
+			c.logger.Error("failed to decode accrual response",
+				zap.String("order", orderNumber),
+				zap.Error(err),
+			)
 			return nil, fmt.Errorf("decode response: %w", err)
 		}
+		c.logger.Info("accrual info",
+			zap.String("order", orderInfo.Number),
+			zap.String("status", orderInfo.Status),
+			zap.String("accrual", orderInfo.Accrual.String()),
+		)
 		return &orderInfo, nil
 
 	case http.StatusNoContent:
+		c.logger.Info("order not registered in accrual system",
+			zap.String("order", orderNumber),
+		)
 		return nil, nil
 
 	case http.StatusTooManyRequests:
@@ -84,6 +111,10 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 			return nil, &errs.ErrRateLimited{RetryAfter: delay}
 		}
 	default:
+		c.logger.Error("unexpected status from accrual",
+			zap.String("order", orderNumber),
+			zap.Int("status", resp.StatusCode),
+		)
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 

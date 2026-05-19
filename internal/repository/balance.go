@@ -69,18 +69,23 @@ func (r *BalanceRepository) SaveWithdrawal(ctx context.Context, userID int, orde
 			}
 		}()
 
+		_, err = tx.ExecContext(ctx,
+			`SELECT 1 FROM orders WHERE user_id = $1 FOR UPDATE`, userID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("lock orders: %w", err)
+		}
+
 		var accrualSum, withdrawnSum decimal.Decimal
 
 		if err := tx.QueryRowContext(ctx,
-			`SELECT COALESCE(SUM(accrual), 0) FROM orders 
-         WHERE user_id = $1 FOR UPDATE`, userID,
+			`SELECT COALESCE(SUM(accrual), 0) FROM orders WHERE user_id = $1`, userID,
 		).Scan(&accrualSum); err != nil {
 			return nil, fmt.Errorf("get accrualSum: %w", err)
 		}
 
 		if err := tx.QueryRowContext(ctx,
-			`SELECT COALESCE(SUM(sum), 0) FROM withdrawals 
-         WHERE user_id = $1 FOR UPDATE`, userID,
+			`SELECT COALESCE(SUM(sum), 0) FROM withdrawals WHERE user_id = $1`, userID,
 		).Scan(&withdrawnSum); err != nil {
 			return nil, fmt.Errorf("get withdrawnSum: %w", err)
 		}
