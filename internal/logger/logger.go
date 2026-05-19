@@ -11,6 +11,6 @@ func NewZapLogger(cfg *config.Config) (*zap.Logger, error) {
 	case "prod":
 		return zap.NewProduction()
 	default:
-		return zap.NewDevelopment()
+		return zap.NewDevelopment(zap.AddStacktrace(zap.ErrorLevel))
 	}
 }

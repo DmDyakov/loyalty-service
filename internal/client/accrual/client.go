@@ -54,9 +54,8 @@ func (c *Client) GetOrderInfo(ctx context.Context, orderNumber string) (*OrderIn
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		c.logger.Error("accrual request failed",
+		c.logger.Warn("accrual service unavailable",
 			zap.String("url", url),
-			zap.Error(err),
 		)
 		return nil, fmt.Errorf("do request: %w", err)
 	}

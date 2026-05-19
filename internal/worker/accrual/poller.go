@@ -93,7 +93,7 @@ func (p *Poller) processBatch(ctx context.Context) {
 				case <-time.After(rateLimitErr.RetryAfter):
 				}
 			} else {
-				p.logger.Error("failed to get order info", zap.String("order", orderNumber), zap.Error(err))
+				p.logger.Warn("failed to get order info, will retry", zap.String("order", orderNumber))
 			}
 			continue
 		}
