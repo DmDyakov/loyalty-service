@@ -45,7 +45,15 @@ func (s *BalanceService) GetUserBalance(ctx context.Context, userID int) (*model
 		return nil, err
 	}
 
-	currentBalance := decimal.Zero.Add(*accrualSum).Sub(*withdrawnSum)
+	currentBalance := decimal.Zero
+
+	if accrualSum != nil {
+		currentBalance = currentBalance.Add(*accrualSum)
+	}
+
+	if withdrawnSum != nil {
+		currentBalance = currentBalance.Sub(*withdrawnSum)
+	}
 
 	return &model.Balance{
 		Current:   &currentBalance,
