@@ -1,6 +1,6 @@
-# go-musthave-diploma-tpl
+# Loyalty-service
 
-Шаблон репозитория для индивидуального дипломного проекта курса «Go-разработчик»
+Накопительная система лояльности
 
 # Начало работы
 
@@ -23,3 +23,137 @@ git fetch template && git checkout template/master .github
 ```
 
 Затем добавьте полученные изменения в свой репозиторий.
+
+### Нейминг веток
+
+- **feat/** — новая функциональность
+- **fix/** — исправление ошибки
+- **docs/** — изменения в документации
+- **style/** — форматирование кода, отступы, точки с запятой (без изменения логики)
+- **refactor/** — рефакторинг кода (не исправляет ошибку и не добавляет функциональность)
+- **perf/** — изменение, улучшающее производительность
+- **test/** — добавление или обновление тестов
+- **chore/** — рутинные задачи: обновление зависимостей, настройка сборки
+- **ci/** — изменения в CI/CD конфигурации
+- **build/** — изменения в системе сборки или внешних зависимостях
+
+### Примеры
+feat/#2-registration
+fix/#15-login-validation
+docs/#7-api-endpoints
+chore/#3-docker-setup
+test/#12-auth-handlers
+refactor/#18-database-layer
+
+### Примечания
+
+- Все ветки вливаются в `master` через Squash and Merge
+- Итоговый коммит должен соответствовать формату Conventional Commits
+
+# Архитектурная схема
+https://drive.google.com/file/d/1pm5SVC891RtNJsOA02LdSOjeHyg8Us-Y/view?usp=sharing
+
+## Порядок разработки
+
+### 1. Подготовка окружения
+
+#### macOS
+
+```bash
+go mod download
+brew install golangci-lint    # опционально
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest  # опционально
+```
+
+#### Windows (PowerShell)
+
+```bash
+go mod download
+choco install make
+choco install golangci-lint    # опционально
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest   # опционально
+```
+
+#### Linux
+
+```bash
+go mod download
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```
+
+### 2. Запустить базу данных
+
+```bash
+make docker-up
+```
+
+### 3. Применить миграции
+
+```bash
+make migrate-up
+```
+
+### 4. Запустить систему начислений (accrual)
+
+В отдельном терминале:
+
+```bash
+make accrual
+```
+
+### 5. Запустить приложение
+
+В третьем терминале:
+
+```bash
+make run
+```
+
+---
+
+## Команды Makefile
+
+### Разработка
+
+| Команда | Описание |
+|---------|----------|
+| `make build` | Собрать бинарный файл |
+| `make run` | Запустить приложение локально |
+| `make test` | Запустить все тесты |
+| `make cover` | Запустить тесты с отчётом о покрытии |
+| `make cover-html` | Открыть отчёт о покрытии в браузере |
+| `make lint` | Проверить код линтером |
+| `make clean` | Удалить бинарник и временные файлы |
+
+### База данных
+
+| Команда | Описание |
+|---------|----------|
+| `make docker-up` | Запустить PostgreSQL |
+| `make docker-down` | Остановить PostgreSQL |
+| `make docker-reset` | Удалить контейнер и все данные |
+| `make docker-logs` | Посмотреть логи PostgreSQL |
+| `make migrate-up` | Применить миграции |
+| `make migrate-down` | Откатить миграции |
+| `make migrate-status` | Статус миграций |
+
+### Окружение
+
+| Команда | Описание |
+|---------|----------|
+| `make dev` | Запустить БД и accrual (всё для разработки) |
+| `make stop` | Остановить БД и accrual |
+| `make accrual` | Запустить только accrual |
+
+---
+
+## Переменные окружения
+
+Для локального запуска создайте файл `.env` в корне проекта:
+
+```
+DATABASE_DSN=postgres://<user>:<password>@localhost:5432/loyalty?sslmode=disable
+ACCRUAL_ADDR=http://localhost:8081
+RUN_ADDRESS=localhost:8080
+```
