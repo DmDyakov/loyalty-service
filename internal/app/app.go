@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 func Run(ctx context.Context, args []string) error {
@@ -89,34 +90,43 @@ func Run(ctx context.Context, args []string) error {
 		logger,
 	)
 
-	appCtx, appCancel := context.WithCancel(ctx)
-	defer appCancel()
+	g, gCtx := errgroup.WithContext(ctx)
 
-	go func() {
+	g.Go(func() error {
 		logger.Info("server started", zap.String("url", server.Addr))
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("listen error", zap.Error(err))
-			appCancel()
+			return fmt.Errorf("server listen error: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	go func() {
+	g.Go(func() error {
 		logger.Info("accrual poller started")
-		accrualPoller.Start(appCtx)
+		accrualPoller.Start(gCtx)
 		logger.Info("accrual poller stopped")
-	}()
 
-	<-appCtx.Done()
-	logger.Info("shutdown signal received")
+		return nil
+	})
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
-	defer shutdownCancel()
+	g.Go(func() error {
+		<-gCtx.Done()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		return fmt.Errorf("graceful shutdown failed: %w", err)
+		logger.Info("shutdown signal received")
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+		defer shutdownCancel()
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("graceful shutdown failed: %w", err)
+		}
+
+		logger.Info("server stopped gracefully")
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
 	}
-
-	logger.Info("server stopped gracefully")
 
 	return nil
 }
